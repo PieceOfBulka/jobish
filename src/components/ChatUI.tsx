@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { Send, Loader2, Sparkles } from "lucide-react";
 
 interface Msg {
@@ -22,6 +22,8 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const tmpId = useId();
+  const seq = useRef(0);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -32,7 +34,7 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
     if (!content || loading) return;
     setError(null);
     setInput("");
-    const userMsg: Msg = { id: `tmp-${Date.now()}`, role: "user", content };
+    const userMsg: Msg = { id: `tmp-${tmpId}-${seq.current++}`, role: "user", content };
     setMessages((m) => [...m, userMsg]);
     setLoading(true);
 

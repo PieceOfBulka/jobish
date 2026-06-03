@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const result = gradeAttempt(graded);
 
   // Если была доступная доп. попытка из-за заморозки — расходуем её
-  let extraTries = 0;
+  const extraTries = 0;
   if (last && last.frozenUntil && last.frozenUntil > new Date() && last.extraTries > 0) {
     await prisma.theoryAttempt.update({
       where: { id: last.id },

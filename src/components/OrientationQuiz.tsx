@@ -104,6 +104,7 @@ export function OrientationQuiz({ done }: { done: boolean }) {
         {q.options.map((o, idx) => (
           <button
             key={idx}
+            data-testid="orientation-option"
             onClick={() => pick(idx)}
             className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition-all ${
               selected === idx

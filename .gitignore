@@ -49,3 +49,8 @@ next-env.d.ts
 *.pdf
 /tmp/
 !.env.example
+
+# tests
+/test-results
+/playwright-report
+/playwright/.cache

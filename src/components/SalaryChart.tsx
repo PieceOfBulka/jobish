@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -19,6 +20,14 @@ export interface SalaryPoint {
 }
 
 export function SalaryChart({ data }: { data: SalaryPoint[] }) {
+  // Рендерим график только после монтирования, чтобы у контейнера была ширина
+  const [mounted, setMounted] = useState(false);
+  // Маунт-гейт нужен, чтобы у контейнера была измеримая ширина (иначе recharts
+  // ругается на нулевые размеры при SSR/первом рендере).
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-64 w-full animate-pulse rounded-xl bg-slate-50" />;
+
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
