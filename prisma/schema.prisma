@@ -1,0 +1,223 @@
+// Jobish — логическая модель данных (MVP, клиентский срез)
+// См. docs/architecture.md
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─────────────── Пользователь и профиль ───────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("client") // client | admin | coach
+  createdAt    DateTime @default(now())
+
+  profile      Profile?
+  orientation  OrientationResult?
+  careerGoals  CareerGoal[]
+  roadmaps     Roadmap[]
+  attempts     TheoryAttempt[]
+  chatSessions ChatSession[]
+  subscription Subscription?
+}
+
+model Profile {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentRole      String?
+  experienceYears  Int       @default(0)
+  bio              String?
+  targetProfession String?   // slug выбранной целевой профессии
+  resumeFileName   String?   // мок загрузки резюме (ФТ-1.4)
+  streakDays       Int       @default(0) // мотивация: ежедневная привычка (ФТ-7)
+  lastVisit        DateTime?
+  updatedAt        DateTime  @updatedAt
+}
+
+// ─────────────── Справочник профессий ───────────────
+
+model Profession {
+  id          String             @id @default(cuid())
+  slug        String             @unique
+  title       String
+  category    String
+  summary     String
+  description String
+  skills      ProfessionSkill[]
+  market      MarketAnalytics?
+  materials   LearningMaterial[]
+  theoryTests TheoryTest[]
+}
+
+model ProfessionSkill {
+  id           String     @id @default(cuid())
+  professionId String
+  profession   Profession @relation(fields: [professionId], references: [id], onDelete: Cascade)
+  name         String
+  type         String     // hard | soft
+  grade        String     // junior | middle | senior
+  order        Int        @default(0)
+}
+
+// Аналитика рынка труда (US6, ФТ-3) — сид-данные
+model MarketAnalytics {
+  id            String     @id @default(cuid())
+  professionId  String     @unique
+  profession    Profession @relation(fields: [professionId], references: [id], onDelete: Cascade)
+  demandLevel   String     // низкая | средняя | высокая
+  openVacancies Int
+  salaryJunior  Int
+  salaryMiddle  Int
+  salarySenior  Int
+  salaryTrend   String     // JSON: [{month, junior, middle, senior}]
+  topCompanies  String     // JSON: [{name, salary, hiring}]
+  source        String
+  updatedAt     DateTime   @default(now())
+}
+
+// Рекомендованные обучающие материалы (US1, ФТ-5)
+model LearningMaterial {
+  id           String     @id @default(cuid())
+  professionId String
+  profession   Profession @relation(fields: [professionId], references: [id], onDelete: Cascade)
+  skillName    String
+  title        String
+  url          String
+  provider     String
+  isFree       Boolean    @default(true)
+}
+
+// ─────────────── Карьерные цели (US9) ───────────────
+
+model CareerGoal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  horizon   String
+  rationale String
+  createdAt DateTime @default(now())
+}
+
+// ─────────────── Roadmap / карта развития (US1,2,3, ФТ-3,4) ───────────────
+
+model Roadmap {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  professionSlug String
+  title          String
+  createdAt      DateTime       @default(now())
+  stages         RoadmapStage[]
+}
+
+model RoadmapStage {
+  id        String        @id @default(cuid())
+  roadmapId String
+  roadmap   Roadmap       @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  title     String
+  order     Int
+  steps     RoadmapStep[]
+}
+
+model RoadmapStep {
+  id            String       @id @default(cuid())
+  stageId       String
+  stage         RoadmapStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  skillName     String
+  status        String       @default("not_started") // not_started | in_progress | done
+  materialUrl   String?
+  materialTitle String?
+  order         Int          @default(0)
+}
+
+// ─────────────── Профориентационный тест (US4,5) ───────────────
+
+model OrientationResult {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers    String   // JSON ответов
+  scores     String   // JSON: соответствие по категориям
+  topMatches String   // JSON: [{slug, title, match}]
+  createdAt  DateTime @default(now())
+}
+
+// ─────────────── Теоретические тесты (US7, ФТ-4) ───────────────
+
+model TheoryTest {
+  id           String           @id @default(cuid())
+  professionId String
+  profession   Profession       @relation(fields: [professionId], references: [id], onDelete: Cascade)
+  title        String
+  topic        String
+  questions    TheoryQuestion[]
+  attempts     TheoryAttempt[]
+}
+
+model TheoryQuestion {
+  id      String     @id @default(cuid())
+  testId  String
+  test    TheoryTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  text    String
+  options String     // JSON массив вариантов
+  correct Int        // индекс правильного варианта
+  topic   String
+  order   Int        @default(0)
+}
+
+// Попытка с механикой "заморозки" при неудаче
+model TheoryAttempt {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId      String
+  test        TheoryTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  score       Int        // % правильных
+  passed      Boolean
+  weakTopics  String     // JSON список слабых тем
+  frozenUntil DateTime?  // заморозка перепрохождения
+  extraTries  Int        @default(0)
+  createdAt   DateTime   @default(now())
+}
+
+// ─────────────── AI-чат-коуч (ФТ-1,2,6; US8,9,10) ───────────────
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String        @default("Новый диалог")
+  createdAt DateTime      @default(now())
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String      // user | assistant
+  content   String
+  createdAt DateTime    @default(now())
+}
+
+// ─────────────── Подписка (мок монетизации) ───────────────
+
+model Subscription {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      String    @default("free") // free | start | optimal | pro
+  status    String    @default("active")
+  startedAt DateTime  @default(now())
+  expiresAt DateTime?
+}
