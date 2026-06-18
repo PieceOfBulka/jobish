@@ -17,7 +17,7 @@ export default async function LoginPage() {
           <AuthForm mode="login" />
         </div>
         <p className="mt-6 rounded-lg bg-brand-50 px-3 py-2 text-center text-xs text-brand-700">
-          Демо-доступ: <b>demo@jobish.ru</b> / <b>demo1234</b>
+          Демо-доступ: <b>demo@jobish.ru</b> / <b>Demo1234!</b>
         </p>
       </div>
     </div>

@@ -13,12 +13,18 @@ datasource db {
 // ─────────────── Пользователь и профиль ───────────────
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         String   @default("client") // client | admin | coach
-  createdAt    DateTime @default(now())
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  passwordAlgo      String    @default("bcrypt") // bcrypt | argon2 | pbkdf2
+  passwordUpdatedAt DateTime  @default(now())
+  name              String
+  role              String    @default("client") // client | coach | admin (ФТ-1.5)
+  isVerified        Boolean   @default(false) // ФТ-1.6
+  isBlocked         Boolean   @default(false) // US17 модерация
+  verificationCode  String? // одноразовый код подтверждения почты
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   profile      Profile?
   orientation  OrientationResult?
@@ -30,17 +36,39 @@ model User {
 }
 
 model Profile {
-  id               String    @id @default(cuid())
-  userId           String    @unique
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  currentRole      String?
-  experienceYears  Int       @default(0)
-  bio              String?
-  targetProfession String?   // slug выбранной целевой профессии
-  resumeFileName   String?   // мок загрузки резюме (ФТ-1.4)
-  streakDays       Int       @default(0) // мотивация: ежедневная привычка (ФТ-7)
-  lastVisit        DateTime?
-  updatedAt        DateTime  @updatedAt
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ФТ-1.2 / ФТ-1.3 — наполнение профиля (логическая модель данных v2)
+  telegramNick      String? // опц., начинается с «@»
+  age               Int? // опц., 0..150
+  experienceMonths  Int     @default(0) // опыт в месяцах, 0..1000
+  educationPlace    String? // вуз/колледж
+  gradeLevel        String? // enum уровня образования
+  currentSpecialty  String? // текущая специальность
+  currentPosition   String? // Junior|Middle|Senior|Lead|Head|Другое
+  preparationLevel  String? // Студент|Выпускник|Джун
+  salaryExpectation Int? // ожидаемая ЗП
+  skills            String? // JSON-массив тегов навыков
+  desiredSpheres    String? // JSON-массив желаемых сфер
+  bio               String?
+  targetProfession  String? // slug выбранной целевой профессии
+  resumeFileName    String? // имя файла резюме (ФТ-1.4, мок хранилища)
+
+  streakDays Int       @default(0) // мотивация: ежедневная привычка (ФТ-7)
+  lastVisit  DateTime?
+  updatedAt  DateTime  @updatedAt
+}
+
+// Заявки в поддержку (NFR_SP3)
+model SupportTicket {
+  id        String   @id @default(cuid())
+  email     String
+  subject   String
+  message   String
+  status    String   @default("open") // open | answered | closed
+  createdAt DateTime @default(now())
 }
 
 // ─────────────── Справочник профессий ───────────────

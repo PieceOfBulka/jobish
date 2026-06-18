@@ -11,7 +11,7 @@ export interface ChatTurn {
 export interface CoachContext {
   userName?: string;
   targetProfession?: string;
-  experienceYears?: number;
+  experienceMonths?: number;
 }
 
 export function isLlmEnabled(): boolean {
@@ -28,8 +28,8 @@ function systemPrompt(ctx: CoachContext): string {
   if (ctx.userName) parts.push(`Имя пользователя: ${ctx.userName}.`);
   if (ctx.targetProfession)
     parts.push(`Целевая профессия пользователя: ${ctx.targetProfession}.`);
-  if (typeof ctx.experienceYears === "number")
-    parts.push(`Опыт работы: ${ctx.experienceYears} лет.`);
+  if (typeof ctx.experienceMonths === "number")
+    parts.push(`Опыт работы: ${ctx.experienceMonths} мес.`);
   return parts.join(" ");
 }
 

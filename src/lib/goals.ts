@@ -8,9 +8,9 @@ export interface GeneratedGoal {
 
 export function generateGoals(
   professionTitle: string,
-  experienceYears: number,
+  experienceMonths: number,
 ): GeneratedGoal[] {
-  const isBeginner = experienceYears < 2;
+  const isBeginner = experienceMonths < 24;
   const goals: GeneratedGoal[] = [];
 
   if (isBeginner) {

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       targetProfession: profile?.targetProfession
         ? (PROFESSION_TITLES[profile.targetProfession] ?? profile.targetProfession)
         : undefined,
-      experienceYears: profile?.experienceYears,
+      experienceMonths: profile?.experienceMonths,
     },
   );
 

@@ -28,7 +28,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         setLoading(false);
         return;
       }
-      router.push("/dashboard");
+      router.push(data.needsVerification ? "/verify" : "/dashboard");
       router.refresh();
     } catch {
       setError("Ошибка сети. Попробуйте ещё раз.");
@@ -51,7 +51,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       <div>
         <label className="label" htmlFor="password">Пароль</label>
         <input id="password" name="password" type="password" className="input" placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} required />
+        {mode === "register" && (
+          <p className="mt-1 text-xs text-slate-400">
+            Более 8 символов, буквы, цифры и спецсимвол.
+          </p>
+        )}
       </div>
+      {mode === "register" && (
+        <div>
+          <label className="label" htmlFor="passwordConfirm">Повторите пароль</label>
+          <input id="passwordConfirm" name="passwordConfirm" type="password" className="input" placeholder="••••••••" autoComplete="new-password" required />
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">

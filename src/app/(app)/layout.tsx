@@ -9,6 +9,8 @@ export default async function AppLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.isBlocked) redirect("/login");
+  if (!user.isVerified) redirect("/verify"); // ФТ-1.6
 
   return (
     <div className="flex min-h-screen bg-canvas lg:flex-row">

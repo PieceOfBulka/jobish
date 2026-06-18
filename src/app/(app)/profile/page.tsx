@@ -44,8 +44,16 @@ export default async function ProfilePage() {
       <div className="mt-6">
         <ProfileForm
           name={user.name}
-          currentRole={profile?.currentRole ?? ""}
-          experienceYears={profile?.experienceYears ?? 0}
+          telegramNick={profile?.telegramNick ?? ""}
+          age={profile?.age != null ? String(profile.age) : ""}
+          experienceMonths={String(profile?.experienceMonths ?? 0)}
+          educationPlace={profile?.educationPlace ?? ""}
+          gradeLevel={profile?.gradeLevel ?? ""}
+          currentSpecialty={profile?.currentSpecialty ?? ""}
+          currentPosition={profile?.currentPosition ?? ""}
+          preparationLevel={profile?.preparationLevel ?? ""}
+          salaryExpectation={profile?.salaryExpectation != null ? String(profile.salaryExpectation) : ""}
+          skills={profile?.skills ? JSON.parse(profile.skills).join(", ") : ""}
           bio={profile?.bio ?? ""}
           resumeFileName={profile?.resumeFileName ?? null}
         />

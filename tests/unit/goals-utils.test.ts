@@ -3,20 +3,20 @@ import { generateGoals } from "../../src/lib/goals";
 import { formatRub, pluralRu } from "../../src/lib/utils";
 
 describe("generateGoals", () => {
-  it("creates beginner-oriented goals for low experience", () => {
-    const goals = generateGoals("Frontend-разработчик", 0);
+  it("creates beginner-oriented goals for low experience (<24 months)", () => {
+    const goals = generateGoals("Frontend-разработчик", 6);
     expect(goals.length).toBeGreaterThanOrEqual(2);
     expect(goals[0].title).toMatch(/Junior/i);
     expect(goals.some((g) => g.title.includes("Frontend-разработчик"))).toBe(true);
   });
 
-  it("creates growth-oriented goals for experienced users", () => {
-    const goals = generateGoals("Аналитик данных", 5);
+  it("creates growth-oriented goals for experienced users (>=24 months)", () => {
+    const goals = generateGoals("Аналитик данных", 60);
     expect(goals[0].title).toMatch(/Middle|Senior/i);
   });
 
   it("always includes a habit goal", () => {
-    const goals = generateGoals("QA-инженер", 3);
+    const goals = generateGoals("QA-инженер", 36);
     expect(goals.some((g) => g.horizon === "постоянно")).toBe(true);
   });
 });

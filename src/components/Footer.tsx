@@ -22,6 +22,7 @@ export function Footer() {
             <li><Link href="/professions" className="hover:text-brand-700">Профессии</Link></li>
             <li><Link href="/pricing" className="hover:text-brand-700">Тарифы</Link></li>
             <li><Link href="/register" className="hover:text-brand-700">Регистрация</Link></li>
+            <li><Link href="/support" className="hover:text-brand-700">Поддержка</Link></li>
           </ul>
         </div>
         <div>

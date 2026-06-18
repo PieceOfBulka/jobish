@@ -392,12 +392,36 @@ async function main() {
       data: {
         email,
         name: "Демо Пользователь",
-        passwordHash: await bcrypt.hash("demo1234", 10),
-        profile: { create: { experienceYears: 1, currentRole: "Студент" } },
+        passwordHash: await bcrypt.hash("Demo1234!", 10),
+        isVerified: true,
+        profile: {
+          create: {
+            experienceMonths: 12,
+            currentPosition: "Junior",
+            currentSpecialty: "Студент",
+            educationPlace: "НИУ ВШЭ",
+            gradeLevel: "Бакалавр",
+            preparationLevel: "Студент",
+          },
+        },
         subscription: { create: { plan: "free" } },
       },
     });
-    console.log("  ✓ Демо-пользователь demo@jobish.ru / demo1234");
+    console.log("  ✓ Демо-пользователь demo@jobish.ru / Demo1234!");
+
+    // Администратор (роль назначается вручную — ФТ-1.5)
+    await prisma.user.create({
+      data: {
+        email: "admin@jobish.ru",
+        name: "Администратор",
+        role: "admin",
+        passwordHash: await bcrypt.hash("Admin1234!", 10),
+        isVerified: true,
+        profile: { create: {} },
+        subscription: { create: { plan: "pro" } },
+      },
+    });
+    console.log("  ✓ Администратор admin@jobish.ru / Admin1234!");
   }
 
   console.log("✅ Готово.");

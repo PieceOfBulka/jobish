@@ -61,6 +61,8 @@ export type SessionUser = {
   name: string;
   role: string;
   plan: string;
+  isVerified: boolean;
+  isBlocked: boolean;
 };
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
@@ -77,5 +79,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     name: user.name,
     role: user.role,
     plan: user.subscription?.plan ?? "free",
+    isVerified: user.isVerified,
+    isBlocked: user.isBlocked,
   };
 }

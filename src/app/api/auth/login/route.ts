@@ -27,6 +27,12 @@ export async function POST(req: NextRequest) {
       { status: 401 },
     );
   }
+  if (user.isBlocked) {
+    return NextResponse.json(
+      { error: "Аккаунт заблокирован. Обратитесь в поддержку." },
+      { status: 403 },
+    );
+  }
   await createSession(user.id);
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, needsVerification: !user.isVerified });
 }

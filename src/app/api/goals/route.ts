@@ -18,7 +18,7 @@ export async function POST() {
 
   const title =
     PROFESSION_TITLES[profile.targetProfession] ?? profile.targetProfession;
-  const goals = generateGoals(title, profile.experienceYears);
+  const goals = generateGoals(title, profile.experienceMonths);
 
   await prisma.careerGoal.deleteMany({ where: { userId } });
   await prisma.careerGoal.createMany({
