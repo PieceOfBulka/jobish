@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { gradeAttempt, canRetake, type GradedAnswer } from "@/lib/theory";
+import { gradeAttempt, canRetake, buildConclusion, type GradedAnswer } from "@/lib/theory";
 
 const schema = z.object({
   testId: z.string().min(1),
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   const test = await prisma.theoryTest.findUnique({
     where: { id: testId },
-    include: { questions: true },
+    include: { questions: true, profession: { include: { materials: true } } },
   });
   if (!test) return NextResponse.json({ error: "Тест не найден" }, { status: 404 });
 
@@ -65,6 +65,20 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // ФТ-2.4 — рекомендации курсов (приоритет материалам по слабым темам)
+  const materials = test.profession.materials;
+  const weakSet = new Set(result.weakTopics.map((t) => t.toLowerCase()));
+  const ranked = [...materials].sort((a, b) => {
+    const aw = weakSet.has(a.skillName.toLowerCase()) ? 0 : 1;
+    const bw = weakSet.has(b.skillName.toLowerCase()) ? 0 : 1;
+    return aw - bw;
+  });
+  const recommendations = ranked.slice(0, 3).map((m) => ({
+    title: m.title,
+    url: m.url,
+    provider: m.provider,
+  }));
+
   return NextResponse.json({
     ok: true,
     score: result.score,
@@ -74,5 +88,7 @@ export async function POST(req: NextRequest) {
     frozenUntil: result.frozenUntil,
     total: test.questions.length,
     correctCount: graded.filter((g) => g.correct).length,
+    conclusion: buildConclusion(result.score, result.passed, result.weakTopics),
+    recommendations,
   });
 }

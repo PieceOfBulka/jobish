@@ -3,6 +3,7 @@ import {
   gradeAttempt,
   canRetake,
   freezeRemainingMs,
+  buildConclusion,
   PASS_THRESHOLD,
   type GradedAnswer,
 } from "../../src/lib/theory";
@@ -75,6 +76,23 @@ describe("canRetake", () => {
   it("allows retake once freeze has passed", () => {
     const past = new Date(now.getTime() - 1000);
     expect(canRetake(past, 0, now)).toBe(true);
+  });
+});
+
+describe("buildConclusion (ФТ-2.4)", () => {
+  it("praises a clean pass", () => {
+    const c = buildConclusion(100, true, []);
+    expect(c).toMatch(/100%/);
+    expect(c).toMatch(/дальше|уверенно/i);
+  });
+  it("mentions weak topics on a pass with gaps", () => {
+    const c = buildConclusion(80, true, ["SQL"]);
+    expect(c).toMatch(/SQL/);
+  });
+  it("focuses on weak topics on a fail", () => {
+    const c = buildConclusion(40, false, ["CSS", "JS"]);
+    expect(c).toMatch(/CSS/);
+    expect(c).toMatch(/40%/);
   });
 });
 

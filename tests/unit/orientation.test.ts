@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   scoreAnswers,
   topMatches,
+  hasStrongMatch,
+  MAX_MATCHES,
+  MATCH_THRESHOLD,
   ORIENTATION_QUESTIONS,
 } from "../../src/lib/orientation";
 
@@ -54,5 +57,23 @@ describe("topMatches", () => {
       expect(m.match).toBeGreaterThanOrEqual(0);
       expect(m.match).toBeLessThanOrEqual(100);
     }
+  });
+
+  it("caps at MAX_MATCHES (<=5) per ФТ-2.2", () => {
+    const matches = topMatches({ tech: 3, data: 3, design: 3, product: 3, people: 3 }, 99);
+    expect(matches.length).toBeLessThanOrEqual(MAX_MATCHES);
+  });
+
+  it("includes a non-empty rationale for each match", () => {
+    const matches = topMatches({ tech: 9, data: 1, design: 0, product: 0, people: 0 });
+    for (const m of matches) expect(m.rationale.length).toBeGreaterThan(0);
+  });
+
+  it("hasStrongMatch reflects the 70% threshold", () => {
+    const strong = topMatches({ tech: 9, data: 0, design: 0, product: 0, people: 0 });
+    expect(hasStrongMatch(strong)).toBe(true);
+    expect(MATCH_THRESHOLD).toBe(70);
+    const none = [{ slug: "x", title: "X", match: 40, rationale: "r" }];
+    expect(hasStrongMatch(none)).toBe(false);
   });
 });

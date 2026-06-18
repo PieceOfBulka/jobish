@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { scoreAnswers, topMatches } from "@/lib/orientation";
+import { scoreAnswers, topMatches, hasStrongMatch } from "@/lib/orientation";
 
 const schema = z.object({
   answers: z.record(z.string(), z.number().int().min(0)),
@@ -35,5 +35,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ ok: true, scores, matches });
+  return NextResponse.json({
+    ok: true,
+    scores,
+    matches,
+    hasStrong: hasStrongMatch(matches),
+  });
 }

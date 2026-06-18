@@ -48,6 +48,24 @@ export function gradeAttempt(
   return { score, passed, weakTopics, strongTopics, frozenUntil };
 }
 
+/** Краткий вывод по результату теста (ФТ-2.4). */
+export function buildConclusion(
+  score: number,
+  passed: boolean,
+  weakTopics: string[],
+): string {
+  if (passed && weakTopics.length === 0) {
+    return `Отличный результат — ${score}%. Вы уверенно владеете темами теста, можно двигаться дальше по карте развития.`;
+  }
+  if (passed) {
+    return `Хороший результат — ${score}%. Тест пройден, но стоит повторить: ${weakTopics.join(", ")}.`;
+  }
+  if (weakTopics.length > 0) {
+    return `Результат ${score}%. Сосредоточьтесь на слабых темах: ${weakTopics.join(", ")} — и попробуйте снова.`;
+  }
+  return `Результат ${score}%. Рекомендуем повторить материал и пройти тест ещё раз.`;
+}
+
 /** Можно ли проходить тест сейчас (учитывая заморозку и доп. попытки). */
 export function canRetake(
   frozenUntil: Date | null,

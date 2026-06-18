@@ -9,6 +9,7 @@ export function OrientationQuiz({ done }: { done: boolean }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [matches, setMatches] = useState<ProfessionMatch[] | null>(null);
+  const [hasStrong, setHasStrong] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const q = ORIENTATION_QUESTIONS[step];
@@ -29,7 +30,10 @@ export function OrientationQuiz({ done }: { done: boolean }) {
     });
     const data = await res.json();
     setLoading(false);
-    if (res.ok) setMatches(data.matches);
+    if (res.ok) {
+      setMatches(data.matches);
+      setHasStrong(data.hasStrong);
+    }
   }
 
   function restart() {
@@ -52,27 +56,38 @@ export function OrientationQuiz({ done }: { done: boolean }) {
             </p>
           </div>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {!hasStrong && (
+          <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            Явных совпадений не найдено — результаты носят рекомендательный
+            характер. Можно пройти тест ещё раз или обсудить выбор с AI-коучем.
+          </p>
+        )}
+        <div className="mt-6 grid gap-4">
           {matches.map((m, i) => (
             <Link
               key={m.slug}
               href={`/professions/${m.slug}`}
-              className="card card-hover flex items-center justify-between p-5"
+              className="card card-hover flex items-start justify-between gap-4 p-5"
             >
-              <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-sm font-bold text-slate-500">
+              <div className="flex items-start gap-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm font-bold text-slate-500">
                   {i + 1}
                 </span>
                 <div>
-                  <p className="font-semibold text-ink">{m.title}</p>
-                  <p className="text-xs text-slate-500">соответствие {m.match}%</p>
+                  <p className="font-semibold text-ink">
+                    {m.title}
+                    <span className={`ml-2 text-xs font-medium ${m.match >= 70 ? "text-emerald-600" : "text-amber-600"}`}>
+                      {m.match}%
+                    </span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">{m.rationale}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="hidden h-2 w-20 overflow-hidden rounded-full bg-slate-100 sm:block">
                   <div className="h-full rounded-full bg-brand-500" style={{ width: `${m.match}%` }} />
                 </div>
-                <ArrowRight className="h-4 w-4 text-brand-600" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-brand-600" />
               </div>
             </Link>
           ))}

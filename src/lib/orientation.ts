@@ -124,10 +124,32 @@ export interface ProfessionMatch {
   slug: string;
   title: string;
   match: number; // 0..100
+  rationale: string; // краткое обоснование (ФТ-2.2)
 }
 
-/** Возвращает профессии в порядке убывания соответствия (US5). */
-export function topMatches(scores: Scores, limit = 10): ProfessionMatch[] {
+// Порог соответствия (ФТ-2.2): профессии выше него считаются «явным совпадением»
+export const MATCH_THRESHOLD = 70;
+// Максимум профессий в отчёте (ФТ-2.2: «не более пяти»)
+export const MAX_MATCHES = 5;
+
+function rationaleFor(
+  affinity: Partial<Record<Category, number>>,
+  match: number,
+): string {
+  const cats = Object.entries(affinity)
+    .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+    .slice(0, 2)
+    .map(([c]) => CATEGORY_LABELS[c as Category]);
+  const base = `Соответствие вашим ответам по направлениям: ${cats.join(", ")}.`;
+  if (match >= MATCH_THRESHOLD) return `${base} Высокий уровень совпадения (${match}%).`;
+  return `${base} Рекомендация носит ориентировочный характер (${match}%).`;
+}
+
+/**
+ * Возвращает до MAX_MATCHES профессий в порядке убывания соответствия (US5, ФТ-2.2).
+ * Каждая запись содержит % соответствия и краткое обоснование.
+ */
+export function topMatches(scores: Scores, limit = MAX_MATCHES): ProfessionMatch[] {
   const maxPerCat = Math.max(1, ...Object.values(scores));
   const results: ProfessionMatch[] = Object.entries(PROFESSION_AFFINITY).map(
     ([slug, affinity]) => {
@@ -139,8 +161,20 @@ export function topMatches(scores: Scores, limit = 10): ProfessionMatch[] {
         norm += weight ?? 0;
       }
       const match = norm > 0 ? Math.round((dot / norm) * 100) : 0;
-      return { slug, title: PROFESSION_TITLES[slug] ?? slug, match };
+      return {
+        slug,
+        title: PROFESSION_TITLES[slug] ?? slug,
+        match,
+        rationale: rationaleFor(affinity, match),
+      };
     },
   );
-  return results.sort((a, b) => b.match - a.match).slice(0, limit);
+  return results
+    .sort((a, b) => b.match - a.match)
+    .slice(0, Math.min(limit, MAX_MATCHES));
+}
+
+/** Есть ли хотя бы одна профессия выше порога (ФТ-2.2). */
+export function hasStrongMatch(matches: ProfessionMatch[]): boolean {
+  return matches.some((m) => m.match >= MATCH_THRESHOLD);
 }

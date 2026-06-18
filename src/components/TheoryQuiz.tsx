@@ -20,6 +20,8 @@ interface Result {
   frozenUntil: string | null;
   total: number;
   correctCount: number;
+  conclusion: string;
+  recommendations: { title: string; url: string; provider: string }[];
 }
 
 export function TheoryQuiz({
@@ -89,6 +91,25 @@ export function TheoryQuiz({
                 <span key={t} className="badge bg-amber-50 text-amber-700">{t}</span>
               ))}
             </div>
+          </div>
+        )}
+
+        <p className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-left text-sm text-slate-600">
+          {result.conclusion}
+        </p>
+
+        {result.recommendations.length > 0 && (
+          <div className="mt-4 text-left">
+            <p className="text-sm font-medium text-ink">Рекомендуем изучить:</p>
+            <ul className="mt-2 space-y-1.5">
+              {result.recommendations.map((r) => (
+                <li key={r.url}>
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-brand-600 hover:underline">
+                    {r.title} <span className="text-xs text-slate-400">· {r.provider}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
