@@ -80,6 +80,13 @@ test("выбор трека строит карту развития", async ({ 
 
   const firstStatus = page.getByRole("button", { name: /Изменить статус навыка/i }).first();
   await firstStatus.click();
+
+  // Конструктор (ФТ-4.3): добавляем новый этап
+  await page.getByRole("button", { name: /Конструктор/i }).click();
+  await page.getByPlaceholder("Название нового этапа").fill("Мой этап");
+  await page.getByRole("button", { name: /^Этап$/i }).click();
+  // В режиме конструктора название этапа — это поле с aria-label
+  await expect(page.getByLabel("Название этапа Мой этап")).toBeVisible();
 });
 
 test("AI-коуч отвечает на сообщение", async ({ page }) => {

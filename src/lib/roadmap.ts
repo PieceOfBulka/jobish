@@ -35,6 +35,8 @@ export async function generateRoadmap(userId: string, slug: string) {
       userId,
       professionSlug: slug,
       title: `Путь: ${profession.title}`,
+      currentStatus: `Сейчас вы в начале пути в направлении «${profession.title}». У вас есть мотивация развиваться, и платформа поможет двигаться структурно. Карта разбита на этапы по грейдам — от базовых навыков к экспертным. Отмечайте прогресс и переходите к материалам прямо с карты.`,
+      targetStatus: `После прохождения всех этапов вы освоите ключевые hard- и soft-навыки профессии «${profession.title}», сможете претендовать на позиции уровня Middle и выше, соберёте портфолио и будете уверенно проходить собеседования.`,
       stages: {
         create: GRADE_STAGES.map((stage, si) => {
           const stageSkills = profession.skills.filter(
@@ -51,6 +53,11 @@ export async function generateRoadmap(userId: string, slug: string) {
                   order: idx,
                   materialTitle: mat?.title ?? null,
                   materialUrl: mat?.url ?? null,
+                  materialAuthor: mat?.provider ?? null,
+                  materialType: mat ? "онлайн-курс" : null,
+                  materialDuration: mat ? 90 : null,
+                  materialRating: mat ? 4.6 : null,
+                  estimateHours: 10 + si * 5,
                 };
               }),
             },

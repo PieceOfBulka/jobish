@@ -41,7 +41,13 @@ export default async function RoadmapPage() {
 
   return (
     <div className="container-page max-w-3xl py-8">
-      <RoadmapView title={roadmap.title} stages={roadmap.stages} />
+      <RoadmapView
+        roadmapId={roadmap.id}
+        title={roadmap.title}
+        currentStatus={roadmap.currentStatus}
+        targetStatus={roadmap.targetStatus}
+        stages={roadmap.stages}
+      />
     </div>
   );
 }

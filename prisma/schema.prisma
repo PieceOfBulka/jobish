@@ -171,6 +171,8 @@ model Roadmap {
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   professionSlug String
   title          String
+  currentStatus  String? // ФТ-4.1: где пользователь сейчас (4-5 предложений)
+  targetStatus   String? // ФТ-4.1: к чему придёт после всех этапов
   createdAt      DateTime       @default(now())
   stages         RoadmapStage[]
 }
@@ -190,9 +192,15 @@ model RoadmapStep {
   stage         RoadmapStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
   skillName     String
   status        String       @default("not_started") // not_started | in_progress | done
-  materialUrl   String?
-  materialTitle String?
-  order         Int          @default(0)
+  // ФТ-4.1 — источник обучения и сроки
+  materialUrl      String?
+  materialTitle    String?
+  materialAuthor   String? // автор/провайдер
+  materialType     String? // статья | онлайн-курс | видео
+  materialDuration Int? // примерная длительность, мин
+  materialRating   Float? // рейтинг из интернета
+  estimateHours    Int? // примерные сроки освоения, ч
+  order            Int     @default(0)
 }
 
 // ─────────────── Профориентационный тест (US4,5) ───────────────
