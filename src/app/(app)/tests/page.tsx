@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canRetake } from "@/lib/theory";
+import { PersonalTestButton } from "@/components/PersonalTestButton";
 import { ClipboardCheck, Lock, CheckCircle2, ArrowRight } from "lucide-react";
 
 export const metadata = { title: "Тесты — Jobish" };
@@ -9,6 +10,7 @@ export const metadata = { title: "Тесты — Jobish" };
 export default async function TestsPage() {
   const user = (await getCurrentUser())!;
   const tests = await prisma.theoryTest.findMany({
+    where: { isPersonal: false },
     include: {
       profession: true,
       _count: { select: { questions: true } },
@@ -28,6 +30,14 @@ export default async function TestsPage() {
         Проверьте знания по профилю. Проходной балл — 70%. При неудаче тест
         замораживается на сутки.
       </p>
+
+      <div className="mt-5">
+        <PersonalTestButton />
+        <p className="mt-2 text-xs text-slate-400">
+          Персональный тест формируется по вашему треку; после неудачной попытки
+          сложность снижается (ФТ-7.7/7.8).
+        </p>
+      </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tests.map((t) => {

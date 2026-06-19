@@ -4,6 +4,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { coachReply, type ChatTurn } from "@/lib/ai";
 import { PROFESSION_TITLES } from "@/lib/orientation";
+import {
+  detectCompletedSkills,
+  motivationalBlock,
+  buildCareerPortrait,
+} from "@/lib/progress";
 
 const schema = z.object({ message: z.string().trim().min(1).max(2000) });
 
@@ -43,6 +48,50 @@ export async function POST(req: NextRequest) {
     data: { sessionId: session.id, role: "user", content: parsed.data.message },
   });
 
+  // ФТ-7.1–7.4 — передача прогресса через чат: отмечаем навыки и обновляем roadmap
+  let progressNote = "";
+  const roadmap = await prisma.roadmap.findFirst({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    include: { stages: { include: { steps: true } } },
+  });
+  if (roadmap) {
+    const steps = roadmap.stages.flatMap((s) => s.steps);
+    const matched = detectCompletedSkills(
+      parsed.data.message,
+      steps.map((s) => s.skillName),
+    );
+    if (matched.length > 0) {
+      const toMark = steps.filter(
+        (s) => matched.includes(s.skillName) && s.status !== "done",
+      );
+      await Promise.all(
+        toMark.map((s) =>
+          prisma.roadmapStep.update({ where: { id: s.id }, data: { status: "done" } }),
+        ),
+      );
+      const done =
+        steps.filter((s) => s.status === "done").length + toMark.length;
+      const next = steps.find(
+        (s) => s.status === "not_started" && !matched.includes(s.skillName),
+      );
+      progressNote = motivationalBlock(done, steps.length, next?.skillName);
+
+      // ФТ-7.4 — обновляем карьерный портрет
+      const portrait = buildCareerPortrait({
+        targetTitle: roadmap.title.replace(/^Путь:\s*/, ""),
+        doneSkills: done,
+        totalSkills: steps.length,
+        strongTopics: [],
+        weakTopics: [],
+      });
+      await prisma.profile.update({
+        where: { userId: user.id },
+        data: { careerPortrait: portrait },
+      });
+    }
+  }
+
   const history = await prisma.chatMessage.findMany({
     where: { sessionId: session.id },
     orderBy: { createdAt: "asc" },
@@ -61,13 +110,16 @@ export async function POST(req: NextRequest) {
     },
   );
 
+  // ФТ-7.3 — мотивационный блок добавляется к ответу при обновлении прогресса
+  const finalContent = progressNote ? `${progressNote}\n\n${content}` : content;
+
   const saved = await prisma.chatMessage.create({
-    data: { sessionId: session.id, role: "assistant", content },
+    data: { sessionId: session.id, role: "assistant", content: finalContent },
   });
 
   return NextResponse.json({
     ok: true,
-    reply: { id: saved.id, content, createdAt: saved.createdAt },
+    reply: { id: saved.id, content: finalContent, createdAt: saved.createdAt },
     source,
   });
 }

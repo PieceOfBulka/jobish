@@ -55,6 +55,8 @@ model Profile {
   bio               String?
   targetProfession  String? // slug выбранной целевой профессии
   resumeFileName    String? // имя файла резюме (ФТ-1.4, мок хранилища)
+  careerPortrait    String? // карьерный портрет (ФТ-7.4)
+  lowerDifficulty   Boolean @default(false) // снижение сложности тестов (ФТ-7.8)
 
   streakDays Int       @default(0) // мотивация: ежедневная привычка (ФТ-7)
   lastVisit  DateTime?
@@ -223,6 +225,8 @@ model TheoryTest {
   profession   Profession       @relation(fields: [professionId], references: [id], onDelete: Cascade)
   title        String
   topic        String
+  ownerId      String? // персональный тест пользователя (ФТ-7.7), null = общий
+  isPersonal   Boolean          @default(false)
   questions    TheoryQuestion[]
   attempts     TheoryAttempt[]
 }

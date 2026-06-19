@@ -98,6 +98,23 @@ test("AI-коуч отвечает на сообщение", async ({ page }) =>
   await expect(page.getByText(/Jobish AI/i).first()).toBeVisible();
 });
 
+test("прогресс через чат обновляет карту (мотивационный блок)", async ({ page }) => {
+  await login(page);
+  await page.goto("/coach");
+  const box = page.getByPlaceholder(/Напишите сообщение/i);
+  await box.fill("Я прошёл React");
+  await box.press("Enter");
+  await expect(page.getByText(/Прогресс по карте/i)).toBeVisible();
+});
+
+test("генерация персонального теста", async ({ page }) => {
+  await login(page);
+  await page.goto("/tests");
+  await page.getByRole("button", { name: /Сгенерировать персональный тест/i }).click();
+  await expect(page).toHaveURL(/\/tests\/[a-z0-9]+/i);
+  await expect(page.getByRole("heading", { name: /Персональный тест/i })).toBeVisible();
+});
+
 test("профиль сохраняет расширенные поля", async ({ page }) => {
   await login(page);
   await page.goto("/profile");

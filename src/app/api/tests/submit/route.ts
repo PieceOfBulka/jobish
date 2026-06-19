@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { gradeAttempt, canRetake, buildConclusion, type GradedAnswer } from "@/lib/theory";
+import {
+  gradeAttempt,
+  canRetake,
+  buildConclusion,
+  shouldLowerDifficulty,
+  type GradedAnswer,
+} from "@/lib/theory";
 
 const schema = z.object({
   testId: z.string().min(1),
@@ -62,6 +68,14 @@ export async function POST(req: NextRequest) {
       weakTopics: JSON.stringify(result.weakTopics),
       frozenUntil: result.frozenUntil,
       extraTries,
+    },
+  });
+
+  // ФТ-7.8 — при <50% снижаем сложность будущих тестов; при успехе снимаем
+  await prisma.profile.update({
+    where: { userId },
+    data: {
+      lowerDifficulty: shouldLowerDifficulty(result.score) ? true : result.passed ? false : undefined,
     },
   });
 

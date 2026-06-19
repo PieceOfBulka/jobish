@@ -3,6 +3,17 @@
 
 export const PASS_THRESHOLD = 70; // % правильных для прохождения
 export const FREEZE_HOURS = 24; // период заморозки при неудаче
+export const LOW_SCORE = 50; // порог «неуспешного» теста (ФТ-7.8)
+
+/** Нужно ли снизить сложность следующего теста (ФТ-7.8: <50%). */
+export function shouldLowerDifficulty(score: number): boolean {
+  return score < LOW_SCORE;
+}
+
+/** Размер персонального теста по сложности (ФТ-7.7: 1–10 вопросов). */
+export function personalTestSize(lowered: boolean): number {
+  return lowered ? 3 : 5;
+}
 
 export interface GradedAnswer {
   questionId: string;
