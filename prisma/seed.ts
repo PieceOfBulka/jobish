@@ -29,6 +29,34 @@ interface ProfSeed {
   test: { title: string; topic: string; questions: QuestionSeed[] };
 }
 
+const CITIES = ["Москва", "Санкт-Петербург", "Удалённо"];
+const FORMATS = ["remote", "hybrid", "office"];
+const EMPLOYMENTS = ["full", "full", "part", "project"];
+
+// Генерация вакансий из компаний и зарплатной вилки профессии (ФТ-3.2)
+function makeVacancies(
+  title: string,
+  companies: { name: string; salary: number }[],
+  salary: [number, number, number],
+) {
+  const grades = [
+    { suffix: "Junior", min: salary[0], max: salary[1], exp: 0 },
+    { suffix: "Middle", min: salary[1], max: salary[2], exp: 2 },
+    { suffix: "Senior", min: salary[2], max: Math.round(salary[2] * 1.4), exp: 5 },
+  ];
+  return grades.map((g, i) => ({
+    title: `${g.suffix} ${title}`,
+    company: companies[i % companies.length].name,
+    city: CITIES[i % CITIES.length],
+    format: FORMATS[i % FORMATS.length],
+    salaryMin: g.min,
+    salaryMax: g.max,
+    experience: g.exp,
+    employment: EMPLOYMENTS[i % EMPLOYMENTS.length],
+    url: "https://hh.ru/",
+  }));
+}
+
 function trend(base: [number, number, number]) {
   // 6 месяцев плавного роста для графика
   const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн"];
@@ -322,6 +350,7 @@ async function main() {
   await prisma.theoryTest.deleteMany();
   await prisma.learningMaterial.deleteMany();
   await prisma.marketAnalytics.deleteMany();
+  await prisma.vacancy.deleteMany();
   await prisma.professionSkill.deleteMany();
   await prisma.profession.deleteMany();
 
@@ -333,6 +362,22 @@ async function main() {
         category: p.category,
         summary: p.summary,
         description: p.description,
+        responsibilities: JSON.stringify([
+          `Решение профильных задач в роли «${p.title}»`,
+          "Работа в команде и коммуникация со стейкхолдерами",
+          "Постоянное развитие навыков из карты развития",
+        ]),
+        typicalDay: `Сочетание профильных задач, командных встреч и обучения. Большую часть дня «${p.title}» занят практической работой по своему направлению.`,
+        transitionMonths: 6,
+        transitionNote:
+          "Ожидаемое время освоения: 4–6 месяцев при ~10 часах в неделю. Возможна временная потеря дохода на старте; начните с базовых навыков уровня Junior.",
+        tasks: JSON.stringify([
+          "Типовые рабочие задачи по специальности",
+          "Участие в проектах и код-/арт-/data-ревью",
+        ]),
+        cases: JSON.stringify([
+          { title: "Идеи pet-проектов и кейсов для портфолио", url: p.materials[0]?.url ?? "https://stepik.org/" },
+        ]),
         skills: {
           create: p.skills.map((s, i) => ({
             name: s.name,
@@ -381,6 +426,12 @@ async function main() {
         },
       },
     });
+    await prisma.vacancy.createMany({
+      data: makeVacancies(p.title, p.market.topCompanies, p.market.salary).map(
+        (v) => ({ ...v, professionId: profession.id }),
+      ),
+    });
+
     console.log(`  ✓ ${p.title}`);
   }
 

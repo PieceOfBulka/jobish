@@ -11,6 +11,7 @@ import {
   Compass,
   Map,
   ClipboardCheck,
+  Briefcase,
   User,
   LogOut,
   Menu,
@@ -22,6 +23,7 @@ const LINKS = [
   { href: "/coach", label: "AI-коуч", icon: MessageSquareHeart },
   { href: "/orientation", label: "Профориентация", icon: Compass },
   { href: "/roadmap", label: "Карта развития", icon: Map },
+  { href: "/vacancies", label: "Вакансии", icon: Briefcase },
   { href: "/tests", label: "Тесты", icon: ClipboardCheck },
   { href: "/profile", label: "Профиль", icon: User },
 ];

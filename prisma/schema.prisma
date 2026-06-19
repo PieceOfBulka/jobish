@@ -74,16 +74,43 @@ model SupportTicket {
 // ─────────────── Справочник профессий ───────────────
 
 model Profession {
-  id          String             @id @default(cuid())
-  slug        String             @unique
+  id          String @id @default(cuid())
+  slug        String @unique
   title       String
   category    String
   summary     String
   description String
+
+  // ФТ-3.1 — разделы сводки рынка
+  responsibilities String? // JSON: ключевые обязанности
+  typicalDay       String? // типичный рабочий день
+  transitionMonths Int? // ожидаемое время освоения (мес.)
+  transitionNote   String? // финансовый мост / рекомендация по переходу
+  tasks            String? // JSON: типичные задачи
+  cases            String? // JSON: [{title, url}] кейсы/датасеты для портфолио
+
   skills      ProfessionSkill[]
   market      MarketAnalytics?
   materials   LearningMaterial[]
   theoryTests TheoryTest[]
+  vacancies   Vacancy[]
+}
+
+// Вакансии (ФТ-3.2 / ФТ-3.3) — внутренняя база (источник: офиц. API hh.ru / моки)
+model Vacancy {
+  id           String     @id @default(cuid())
+  professionId String
+  profession   Profession @relation(fields: [professionId], references: [id], onDelete: Cascade)
+  title        String
+  company      String
+  city         String
+  format       String // remote | hybrid | office
+  salaryMin    Int
+  salaryMax    Int
+  experience   Int // требуемый опыт, лет
+  employment   String // full | part | project
+  url          String     @default("")
+  createdAt    DateTime   @default(now())
 }
 
 model ProfessionSkill {

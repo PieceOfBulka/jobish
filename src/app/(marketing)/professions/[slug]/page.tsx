@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { formatRub } from "@/lib/utils";
 import { SalaryChart, type SalaryPoint } from "@/components/SalaryChart";
 import { ChooseTrackButton } from "@/components/ChooseTrackButton";
-import { ExternalLink, Briefcase, FileQuestion } from "lucide-react";
+import { ExternalLink, Briefcase, FileQuestion, Clock, ListChecks } from "lucide-react";
 
 const GRADES = [
   { key: "junior", label: "Junior" },
@@ -44,6 +44,14 @@ export default async function ProfessionDetail({
 
   const hard = profession.skills.filter((s) => s.type === "hard");
   const soft = profession.skills.filter((s) => s.type === "soft");
+
+  const responsibilities: string[] = profession.responsibilities
+    ? JSON.parse(profession.responsibilities)
+    : [];
+  const tasks: string[] = profession.tasks ? JSON.parse(profession.tasks) : [];
+  const cases: { title: string; url: string }[] = profession.cases
+    ? JSON.parse(profession.cases)
+    : [];
 
   return (
     <div className="container-page py-12">
@@ -121,6 +129,80 @@ export default async function ProfessionDetail({
               </ul>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Описание профессии (ФТ-3.1, раздел 1) */}
+      {(responsibilities.length > 0 || profession.typicalDay) && (
+        <section className="mt-10 grid gap-5 md:grid-cols-2">
+          {responsibilities.length > 0 && (
+            <div className="card p-6">
+              <h2 className="text-lg font-bold text-ink">Ключевые обязанности</h2>
+              <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                {responsibilities.map((r) => (
+                  <li key={r} className="flex items-start gap-2">
+                    <ListChecks className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" /> {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {profession.typicalDay && (
+            <div className="card p-6">
+              <h2 className="text-lg font-bold text-ink">Типичный рабочий день</h2>
+              <p className="mt-3 text-sm text-slate-600">{profession.typicalDay}</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Сложность перехода (ФТ-3.1, раздел 3) */}
+      {(profession.transitionMonths || profession.transitionNote) && (
+        <section className="mt-6">
+          <div className="card flex items-start gap-4 p-6">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600">
+              <Clock className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold text-ink">Сложность перехода</h2>
+              {profession.transitionMonths && (
+                <p className="mt-1 text-sm font-medium text-ink">
+                  Ожидаемое время освоения: ~{profession.transitionMonths} мес.
+                </p>
+              )}
+              {profession.transitionNote && (
+                <p className="mt-1 text-sm text-slate-600">{profession.transitionNote}</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Задачи и кейсы (ФТ-3.1, раздел 7) */}
+      {(tasks.length > 0 || cases.length > 0) && (
+        <section className="mt-6 grid gap-5 md:grid-cols-2">
+          {tasks.length > 0 && (
+            <div className="card p-6">
+              <h2 className="text-lg font-bold text-ink">Типичные задачи</h2>
+              <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                {tasks.map((t) => <li key={t}>• {t}</li>)}
+              </ul>
+            </div>
+          )}
+          {cases.length > 0 && (
+            <div className="card p-6">
+              <h2 className="text-lg font-bold text-ink">Кейсы для портфолио</h2>
+              <ul className="mt-3 space-y-2 text-sm">
+                {cases.map((c) => (
+                  <li key={c.url}>
+                    <a href={c.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:underline">
+                      <ExternalLink className="h-3.5 w-3.5" /> {c.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 

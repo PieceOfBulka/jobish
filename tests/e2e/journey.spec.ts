@@ -110,6 +110,17 @@ test("форма поддержки принимает обращение", asyn
   await expect(page.getByText(/Обращение отправлено/i)).toBeVisible();
 });
 
+test("поиск вакансий с фильтрами", async ({ page }) => {
+  await login(page);
+  await page.goto("/vacancies");
+  await expect(page.getByRole("heading", { name: "Поиск вакансий" })).toBeVisible();
+  // Фильтр по городу
+  await page.getByLabel("Город").selectOption("Москва");
+  await page.getByRole("button", { name: /Применить фильтры/i }).click();
+  await expect(page).toHaveURL(/city=/);
+  await expect(page.getByText(/Найдено:/)).toBeVisible();
+});
+
 test("оформление тарифа в демо-режиме", async ({ page }) => {
   await login(page);
   await page.goto("/pricing");
