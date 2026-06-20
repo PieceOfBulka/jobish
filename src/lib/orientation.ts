@@ -1,5 +1,17 @@
-// Профориентационный тест (US4, US5) — вопросы и логика скоринга.
+// Профориентационный тест (US4, US5, ФТ-2.1) — вопросы и логика скоринга.
 // Чистая логика без зависимостей (покрыта unit-тестами).
+//
+// Методология: вопросы адаптированы под IT-направления на основе модели
+// профессиональных интересов Дж. Голланда (RIASEC) и публичной методики
+// O*NET Interest Profiler (Министерство труда США, public domain).
+// Пять направлений ≈ срез RIASEC под IT: tech (Realistic+Investigative),
+// data (Investigative+Conventional), design (Artistic), product (Enterprising),
+// people (Social).
+
+// Краткая ссылка на методологию для отображения в UI.
+export const ORIENTATION_METHODOLOGY =
+  "Методика основана на модели профессиональных интересов Дж. Голланда (RIASEC) " +
+  "и публичной методике O*NET Interest Profiler (Министерство труда США).";
 
 export type Category = "tech" | "data" | "design" | "product" | "people";
 
@@ -83,7 +95,259 @@ export const ORIENTATION_QUESTIONS: OrientationQuestion[] = [
       { label: "Команда, которая достигла цели вместе", weights: { people: 2, product: 1 } },
     ],
   },
+  {
+    id: "q7",
+    text: "Какой проект вы бы выбрали на хакатоне?",
+    options: [
+      { label: "Написать backend-сервис с нуля", weights: { tech: 3 } },
+      { label: "Построить ML-модель на данных соревнования", weights: { data: 3 } },
+      { label: "Сделать запоминающийся визуальный прототип", weights: { design: 3 } },
+      { label: "Собрать команду и распределить роли", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q8",
+    text: "Что вам интереснее изучать в свободное время?",
+    options: [
+      { label: "Новый язык программирования или фреймворк", weights: { tech: 3 } },
+      { label: "Методы статистики и работы с данными", weights: { data: 3 } },
+      { label: "Принципы типографики и композиции", weights: { design: 3 } },
+      { label: "Психологию переговоров и лидерства", weights: { people: 3 } },
+    ],
+  },
+  {
+    id: "q9",
+    text: "Какую роль вы чаще занимаете в групповом проекте?",
+    options: [
+      { label: "Пишу основную техническую часть", weights: { tech: 3 } },
+      { label: "Считаю метрики и проверяю гипотезы", weights: { data: 3 } },
+      { label: "Отвечаю за внешний вид и подачу", weights: { design: 3 } },
+      { label: "Слежу за сроками и договорённостями", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q10",
+    text: "Что вас раздражает в работе сильнее всего?",
+    options: [
+      { label: "Неоптимальный, медленный код", weights: { tech: 3 } },
+      { label: "Решения, принятые без данных", weights: { data: 3 } },
+      { label: "Неудобный, уродливый интерфейс", weights: { design: 3 } },
+      { label: "Несогласованность в команде", weights: { people: 2, product: 1 } },
+    ],
+  },
+  {
+    id: "q11",
+    text: "О чём вам приятнее читать профессиональные статьи?",
+    options: [
+      { label: "Архитектура систем и алгоритмы", weights: { tech: 3 } },
+      { label: "Кейсы аналитики и A/B-тесты", weights: { data: 3 } },
+      { label: "Тренды дизайна и UX-исследования", weights: { design: 3 } },
+      { label: "Управление продуктом и стратегия", weights: { product: 3 } },
+    ],
+  },
+  {
+    id: "q12",
+    text: "Какая «суперсила» вам ближе?",
+    options: [
+      { label: "Разобраться в любой технологии", weights: { tech: 3 } },
+      { label: "Увидеть закономерность в хаосе цифр", weights: { data: 3 } },
+      { label: "Сделать сложное красивым и понятным", weights: { design: 3 } },
+      { label: "Объединять людей вокруг цели", weights: { people: 2, product: 1 } },
+    ],
+  },
+  {
+    id: "q13",
+    text: "За что вас чаще хвалят?",
+    options: [
+      { label: "За технические решения", weights: { tech: 3 } },
+      { label: "За точность и внимательность к деталям", weights: { data: 2, tech: 1 } },
+      { label: "За вкус и аккуратность", weights: { design: 3 } },
+      { label: "За умение договариваться", weights: { people: 3 } },
+    ],
+  },
+  {
+    id: "q14",
+    text: "Какой курс вы бы прошли первым?",
+    options: [
+      { label: "«Промышленная разработка на Python»", weights: { tech: 3 } },
+      { label: "«Аналитика данных и SQL»", weights: { data: 3 } },
+      { label: "«UX/UI-дизайн с нуля»", weights: { design: 3 } },
+      { label: "«Управление IT-продуктом»", weights: { product: 3 } },
+    ],
+  },
+  {
+    id: "q15",
+    text: "Что для вас «хорошо сделанная работа»?",
+    options: [
+      { label: "Надёжная, масштабируемая система", weights: { tech: 3 } },
+      { label: "Вывод, подтверждённый данными", weights: { data: 3 } },
+      { label: "Решение, которым приятно пользоваться", weights: { design: 2, product: 1 } },
+      { label: "Довольные команда и клиент", weights: { people: 2, product: 1 } },
+    ],
+  },
+  {
+    id: "q16",
+    text: "Где вам комфортнее всего?",
+    options: [
+      { label: "Наедине со сложной задачей и кодом", weights: { tech: 3 } },
+      { label: "В таблицах, дашбордах и графиках", weights: { data: 3 } },
+      { label: "В графическом редакторе", weights: { design: 3 } },
+      { label: "На встречах и в общении с людьми", weights: { people: 3 } },
+    ],
+  },
+  {
+    id: "q17",
+    text: "Какую задачу возьмёте охотнее?",
+    options: [
+      { label: "Починить баг в проде", weights: { tech: 3 } },
+      { label: "Найти причину падения метрики", weights: { data: 3 } },
+      { label: "Переработать экран оформления заказа", weights: { design: 2, product: 1 } },
+      { label: "Согласовать требования между отделами", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q18",
+    text: "Что вам ближе в продукте?",
+    options: [
+      { label: "Как он устроен внутри", weights: { tech: 3 } },
+      { label: "Какие цифры он показывает", weights: { data: 3 } },
+      { label: "Как он выглядит и ощущается", weights: { design: 3 } },
+      { label: "Какую ценность он несёт пользователю", weights: { product: 3 } },
+    ],
+  },
+  {
+    id: "q19",
+    text: "Какое достижение порадовало бы вас больше?",
+    options: [
+      { label: "Ускорил систему вдвое", weights: { tech: 3 } },
+      { label: "Нашёл инсайт, изменивший стратегию", weights: { data: 3 } },
+      { label: "Редизайн поднял конверсию", weights: { design: 2, product: 1 } },
+      { label: "Запустил продукт вместе с командой", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q20",
+    text: "Какой набор инструментов интереснее освоить?",
+    options: [
+      { label: "Docker, Git, CI/CD", weights: { tech: 3 } },
+      { label: "SQL, Python, BI-системы", weights: { data: 3 } },
+      { label: "Figma, инструменты прототипирования", weights: { design: 3 } },
+      { label: "Jira, roadmap-инструменты", weights: { product: 3 } },
+    ],
+  },
+  {
+    id: "q21",
+    text: "Что вы скорее заметите в приложении первым?",
+    options: [
+      { label: "Скорость и стабильность", weights: { tech: 3 } },
+      { label: "Какие данные оно собирает", weights: { data: 3 } },
+      { label: "Дизайн и анимации", weights: { design: 3 } },
+      { label: "Насколько оно решает мою задачу", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q22",
+    text: "На что вы опираетесь, принимая решение?",
+    options: [
+      { label: "На техническую реализуемость", weights: { tech: 2, product: 1 } },
+      { label: "На цифры и аналитику", weights: { data: 3 } },
+      { label: "На ощущение и эстетику", weights: { design: 3 } },
+      { label: "На мнение людей и команды", weights: { people: 3 } },
+    ],
+  },
+  {
+    id: "q23",
+    text: "Какая встреча вам не в тягость?",
+    options: [
+      { label: "Технический дизайн-ревью", weights: { tech: 3 } },
+      { label: "Разбор метрик и дашбордов", weights: { data: 3 } },
+      { label: "Обсуждение макетов", weights: { design: 3 } },
+      { label: "Разговор один на один с человеком", weights: { people: 3 } },
+    ],
+  },
+  {
+    id: "q24",
+    text: "Что вы хотели бы автоматизировать в первую очередь?",
+    options: [
+      { label: "Деплой и тестирование", weights: { tech: 3 } },
+      { label: "Сбор и обработку отчётов", weights: { data: 3 } },
+      { label: "Генерацию однотипных макетов", weights: { design: 2, tech: 1 } },
+      { label: "Координацию задач команды", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q25",
+    text: "Какой фидбэк для вас ценнее?",
+    options: [
+      { label: "«Технически безупречно»", weights: { tech: 3 } },
+      { label: "«Выводы точны и обоснованы»", weights: { data: 3 } },
+      { label: "«Выглядит и работает превосходно»", weights: { design: 3 } },
+      { label: "«Ты отлично ведёшь за собой людей»", weights: { people: 3 } },
+    ],
+  },
+  {
+    id: "q26",
+    text: "Что вам ближе в обучении?",
+    options: [
+      { label: "Разобрать, как всё работает под капотом", weights: { tech: 3 } },
+      { label: "Проверить гипотезу экспериментом", weights: { data: 3 } },
+      { label: "Взять красивый пример и улучшить его", weights: { design: 3 } },
+      { label: "Обсудить и применить на практике с другими", weights: { people: 2, product: 1 } },
+    ],
+  },
+  {
+    id: "q27",
+    text: "Кем вы хотели бы стать через 5 лет?",
+    options: [
+      { label: "Сильным инженером / архитектором", weights: { tech: 3 } },
+      { label: "Ведущим аналитиком / data scientist", weights: { data: 3 } },
+      { label: "Лид-дизайнером", weights: { design: 3 } },
+      { label: "Руководителем продукта / команды", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q28",
+    text: "Что мотивирует вас в задаче сильнее?",
+    options: [
+      { label: "Техническая сложность", weights: { tech: 3 } },
+      { label: "Возможность найти истину в данных", weights: { data: 3 } },
+      { label: "Свобода творчества", weights: { design: 3 } },
+      { label: "Влияние на людей и бизнес", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q29",
+    text: "Какой блог или канал вы бы вели?",
+    options: [
+      { label: "Про код и архитектуру", weights: { tech: 3 } },
+      { label: "Про данные и визуализацию", weights: { data: 3 } },
+      { label: "Про дизайн и насмотренность", weights: { design: 3 } },
+      { label: "Про продукт и карьеру", weights: { product: 2, people: 1 } },
+    ],
+  },
+  {
+    id: "q30",
+    text: "Что для вас важнее всего в результате?",
+    options: [
+      { label: "Чистая, продуманная архитектура", weights: { tech: 3 } },
+      { label: "Измеримый, доказанный результат", weights: { data: 2, product: 1 } },
+      { label: "Безупречный пользовательский опыт", weights: { design: 2, product: 1 } },
+      { label: "Счастливые пользователи и команда", weights: { people: 2, product: 1 } },
+    ],
+  },
 ];
+
+/**
+ * Случайные ответы на все вопросы — для демо-кнопки «Пропустить опрос».
+ * Возвращает валидную карту { questionId: optionIndex }.
+ */
+export function randomAnswers(): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const q of ORIENTATION_QUESTIONS) {
+    out[q.id] = Math.floor(Math.random() * q.options.length);
+  }
+  return out;
+}
 
 // Привязка профессий к категориям (вес = насколько профессия про эту категорию)
 export const PROFESSION_AFFINITY: Record<string, Partial<Record<Category, number>>> = {
