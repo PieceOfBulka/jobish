@@ -46,6 +46,8 @@ next-env.d.ts
 /dev.db
 /dev.db-journal
 /.stash
+/.hh-token.json
+/.dev*.log
 *.pdf
 /tmp/
 !.env.example
