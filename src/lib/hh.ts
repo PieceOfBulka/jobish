@@ -94,6 +94,131 @@ interface HhVacancy {
   salary?: { from: number | null; to: number | null; currency: string | null; gross: boolean | null } | null;
 }
 
+// ─────────── Поиск вакансий (ФТ-3.2 / ФТ-3.3) ───────────
+
+// Названия городов → area id hh.ru (частые регионы).
+export const CITY_AREA: Record<string, string> = {
+  "Москва": "1",
+  "Санкт-Петербург": "2",
+  "Новосибирск": "4",
+  "Екатеринбург": "3",
+  "Казань": "88",
+};
+
+export interface HhVacancyItem {
+  id: string;
+  title: string;
+  company: string;
+  city: string;
+  format: string; // remote | hybrid | office
+  salaryMin: number;
+  salaryMax: number;
+  experience: number; // требуемый опыт, лет
+  employment: string; // full | part | project
+  url: string;
+}
+
+// hh enum опыта → нижняя граница в годах (для отображения «опыт от N лет»).
+const EXP_TO_YEARS: Record<string, number> = {
+  noExperience: 0,
+  between1And3: 1,
+  between3And6: 3,
+  moreThan6: 6,
+};
+// Максимально допустимый опыт (лет) → bucket hh для фильтра.
+function yearsToExpBucket(maxYears: number): string {
+  if (maxYears <= 0) return "noExperience";
+  if (maxYears <= 3) return "between1And3";
+  if (maxYears <= 6) return "between3And6";
+  return "moreThan6";
+}
+// hh schedule.id → формат приложения.
+function scheduleToFormat(scheduleId?: string): string {
+  if (scheduleId === "remote") return "remote";
+  if (scheduleId === "flexible" || scheduleId === "shift") return "hybrid";
+  return "office";
+}
+
+interface HhSearchItem {
+  id: string;
+  name: string;
+  employer?: { name?: string } | null;
+  area?: { name?: string } | null;
+  salary?: { from: number | null; to: number | null; currency: string | null } | null;
+  experience?: { id?: string } | null;
+  employment?: { id?: string } | null;
+  schedule?: { id?: string } | null;
+  alternate_url?: string;
+}
+
+export interface VacancySearchOpts {
+  text: string;
+  city?: string;
+  salaryFrom?: number;
+  experienceMax?: number;
+  employment?: string;
+  format?: string;
+  perPage?: number;
+}
+
+/** Маппит ответ hh.ru в плоскую модель вакансии приложения. */
+function mapHhItem(v: HhSearchItem): HhVacancyItem {
+  const s = v.salary;
+  const lo = s?.from ?? s?.to ?? 0;
+  const hi = s?.to ?? s?.from ?? 0;
+  return {
+    id: v.id,
+    title: v.name,
+    company: v.employer?.name ?? "—",
+    city: v.area?.name ?? "—",
+    format: scheduleToFormat(v.schedule?.id),
+    salaryMin: lo,
+    salaryMax: hi,
+    experience: EXP_TO_YEARS[v.experience?.id ?? "noExperience"] ?? 0,
+    employment: v.employment?.id ?? "full",
+    url: v.alternate_url ?? "https://hh.ru/",
+  };
+}
+
+/**
+ * Живой поиск вакансий по hh.ru (ФТ-3.2). Возвращает null, если выключено/недоступно.
+ */
+export async function fetchHhVacancies(opts: VacancySearchOpts): Promise<HhVacancyItem[] | null> {
+  if (!isHhEnabled()) return null;
+  const token = await getToken();
+  if (!token) return null;
+  try {
+    const url = new URL(`${API}/vacancies`);
+    url.searchParams.set("text", opts.text);
+    url.searchParams.set("per_page", String(opts.perPage ?? 30));
+    const areaId = opts.city ? CITY_AREA[opts.city] : undefined;
+    if (areaId) url.searchParams.set("area", areaId);
+    if (opts.city === "Удалённо" || opts.format === "remote") url.searchParams.set("schedule", "remote");
+    if (typeof opts.salaryFrom === "number") {
+      url.searchParams.set("salary", String(opts.salaryFrom));
+      url.searchParams.set("only_with_salary", "true");
+    }
+    if (typeof opts.experienceMax === "number") {
+      url.searchParams.set("experience", yearsToExpBucket(opts.experienceMax));
+    }
+    if (opts.employment && ["full", "part", "project"].includes(opts.employment)) {
+      url.searchParams.set("employment", opts.employment);
+    }
+    const res = await fetchWithTimeout(url.toString(), {
+      headers: { Authorization: `Bearer ${token}`, "User-Agent": USER_AGENT },
+    });
+    if (!res.ok) {
+      console.warn(`[hh] /vacancies search → ${res.status} (text="${opts.text}")`);
+      return null;
+    }
+    const data = (await res.json()) as { items?: HhSearchItem[] };
+    return (data.items ?? []).map(mapHhItem);
+  } catch (e) {
+    console.warn("[hh] vacancy search failed:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 /** Достаёт зарплаты (в рублях) из выдачи hh.ru — середина вилки from/to. */
 export function extractSalaries(items: HhVacancy[]): number[] {
   const out: number[] = [];
