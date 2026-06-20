@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink, Circle, CircleDot, CheckCircle2, Trophy,
-  Pencil, Plus, Trash2, ChevronUp, ChevronDown, Save, X, ArrowRight,
+  Pencil, Plus, Trash2, ChevronUp, ChevronDown, Save, X, ArrowRight, RefreshCw,
 } from "lucide-react";
 import { stepHint, type SkillType, type Grade } from "@/lib/roadmap-content";
 
@@ -90,6 +90,16 @@ export function RoadmapView({
             </svg>
             <span className="text-sm font-bold text-brand-700">{progress}%</span>
           </div>
+          {!edit && (
+            <button
+              onClick={() => post({ action: "refresh_roadmap", roadmapId })}
+              disabled={busy}
+              className="btn-ghost"
+              title="Подтянуть курсы (включая soft-skills) и описания этапов из каталога"
+            >
+              <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} /> Обновить
+            </button>
+          )}
           <button onClick={() => setEdit((e) => !e)} className={edit ? "btn-primary" : "btn-outline"}>
             {edit ? <><X className="h-4 w-4" /> Готово</> : <><Pencil className="h-4 w-4" /> Конструктор</>}
           </button>

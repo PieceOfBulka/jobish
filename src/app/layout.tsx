@@ -19,7 +19,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ru" className={`${inter.variable} h-full`}>
-      <body className="min-h-full">{children}</body>
+      {/* suppressHydrationWarning: браузерные расширения добавляют атрибуты
+          к <body> (напр. data-gptw) до гидратации React — это не наша рассинхронизация. */}
+      <body className="min-h-full" suppressHydrationWarning>{children}</body>
     </html>
   );
 }

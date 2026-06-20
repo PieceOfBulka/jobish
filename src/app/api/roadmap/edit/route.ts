@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { moveInOrder, nextOrder } from "@/lib/order";
+import {
+  stageDescription,
+  estimateForSkill,
+  type Grade,
+  type SkillType,
+} from "@/lib/roadmap-content";
+
+const STAGE_GRADES: Grade[] = ["junior", "middle", "senior"];
 
 // Конструктор дорожной карты (ФТ-4.2 / ФТ-4.3): CRUD этапов и шагов.
 async function ownsRoadmap(userId: string, roadmapId: string) {
@@ -122,6 +130,62 @@ export async function POST(req: NextRequest) {
           prisma.roadmapStep.update({ where: { id: u.id }, data: { order: u.order } }),
         ),
       );
+      return ok();
+    }
+    case "refresh_roadmap": {
+      // Неразрушающая пересборка: добавляет материалы (вкл. soft-курсы), бейджи
+      // hard/soft, описания этапов и часы в существующую карту, не трогая прогресс.
+      const r = await ownsRoadmap(userId, body.roadmapId);
+      if (!r) return notFound();
+      const roadmap = await prisma.roadmap.findUnique({
+        where: { id: r.id },
+        include: { stages: { orderBy: { order: "asc" }, include: { steps: true } } },
+      });
+      const profession = await prisma.profession.findUnique({
+        where: { slug: r.professionSlug },
+        include: { materials: true, skills: true },
+      });
+      if (!roadmap || !profession) return notFound();
+
+      const matBySkill = new Map(profession.materials.map((m) => [m.skillName, m]));
+      const typeBySkill = new Map(profession.skills.map((s) => [s.name, s.type]));
+
+      for (let si = 0; si < roadmap.stages.length; si++) {
+        const stage = roadmap.stages[si];
+        const grade = STAGE_GRADES[si] ?? "senior";
+        if (!stage.description) {
+          await prisma.roadmapStage.update({
+            where: { id: stage.id },
+            data: {
+              description: stageDescription(
+                grade,
+                profession.title,
+                stage.steps.map((s) => s.skillName),
+              ),
+            },
+          });
+        }
+        for (const step of stage.steps) {
+          const type = (step.skillType ?? typeBySkill.get(step.skillName) ?? null) as SkillType | null;
+          const mat = step.materialUrl ? null : matBySkill.get(step.skillName);
+          await prisma.roadmapStep.update({
+            where: { id: step.id },
+            data: {
+              skillType: type ?? undefined,
+              estimateHours: estimateForSkill(type, grade),
+              // материал добавляем только в пустые шаги, ручные ссылки не трогаем
+              ...(mat
+                ? {
+                    materialTitle: mat.title,
+                    materialUrl: mat.url,
+                    materialAuthor: mat.provider,
+                    materialType: "онлайн-курс",
+                  }
+                : {}),
+            },
+          });
+        }
+      }
       return ok();
     }
     default:
