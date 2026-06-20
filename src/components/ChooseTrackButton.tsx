@@ -15,6 +15,7 @@ export function ChooseTrackButton({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function choose() {
     if (!isAuthed) {
@@ -22,23 +23,33 @@ export function ChooseTrackButton({
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug }),
-    });
-    if (res.ok) {
-      router.push("/roadmap");
-      router.refresh();
-    } else {
-      setLoading(false);
+    setError(null);
+    try {
+      const res = await fetch("/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      if (res.ok) {
+        router.push("/roadmap");
+        router.refresh();
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "Не удалось создать трек. Попробуйте ещё раз.");
+    } catch {
+      setError("Сеть недоступна. Попробуйте ещё раз.");
     }
+    setLoading(false);
   }
 
   return (
-    <button onClick={choose} className="btn-primary" disabled={loading || isCurrent}>
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Route className="h-4 w-4" />}
-      {isCurrent ? "Это ваш текущий трек" : "Выбрать как трек развития"}
-    </button>
+    <div className="flex flex-col items-stretch gap-1">
+      <button onClick={choose} className="btn-primary" disabled={loading || isCurrent}>
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Route className="h-4 w-4" />}
+        {isCurrent ? "Это ваш текущий трек" : "Выбрать как трек развития"}
+      </button>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
   );
 }
