@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { formatRub } from "@/lib/utils";
 import { SalaryChart, type SalaryPoint } from "@/components/SalaryChart";
+import { SalaryStats } from "@/components/SalaryStats";
 import { ChooseTrackButton } from "@/components/ChooseTrackButton";
 import { ExternalLink, Briefcase, FileQuestion, Clock, ListChecks } from "lucide-react";
 
@@ -128,6 +129,10 @@ export default async function ProfessionDetail({
                 ))}
               </ul>
             </div>
+          </div>
+          {/* Зарплатная статистика: медиана/перцентили + город (ФТ-3.1) */}
+          <div className="mt-5">
+            <SalaryStats slug={slug} />
           </div>
         </section>
       )}
