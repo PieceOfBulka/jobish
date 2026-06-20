@@ -29,6 +29,35 @@ interface ProfSeed {
   test: { title: string; topic: string; questions: QuestionSeed[] };
 }
 
+// Курсы по soft-skills (ФТ-5, US1): подобраны под названия soft-навыков из карт.
+// Coursera — бесплатный аудит; Stepik — бесплатно; ссылки проверены.
+const SOFT_MATERIALS: Record<string, MaterialSeed> = {
+  // Коммуникация и работа в команде
+  "Коммуникация в команде": { skillName: "Коммуникация в команде", title: "Soft Skills: незаменимые жизненные навыки", url: "https://stepik.org/course/105225/promo", provider: "Stepik" },
+  "Коммуникация": { skillName: "Коммуникация", title: "Soft Skills: незаменимые жизненные навыки", url: "https://stepik.org/course/105225/promo", provider: "Stepik" },
+  "Коммуникация с разработчиками": { skillName: "Коммуникация с разработчиками", title: "Гибкие навыки (Soft Skills) — каталог курсов", url: "https://stepik.org/catalog/182", provider: "Stepik" },
+  "Коммуникабельность": { skillName: "Коммуникабельность", title: "Soft Skills: незаменимые жизненные навыки", url: "https://stepik.org/course/105225/promo", provider: "Stepik" },
+  // Обучаемость, мышление, внимательность
+  "Самостоятельность и поиск решений": { skillName: "Самостоятельность и поиск решений", title: "Learning How to Learn", url: "https://www.coursera.org/learn/learning-how-to-learn", provider: "Coursera" },
+  "Критическое мышление": { skillName: "Критическое мышление", title: "Learning How to Learn", url: "https://www.coursera.org/learn/learning-how-to-learn", provider: "Coursera" },
+  "Внимательность к деталям": { skillName: "Внимательность к деталям", title: "Learning How to Learn", url: "https://www.coursera.org/learn/learning-how-to-learn", provider: "Coursera" },
+  // Лидерство и влияние
+  "Менторство": { skillName: "Менторство", title: "Leadership and Influence", url: "https://www.coursera.org/learn/leadership-influence", provider: "Coursera" },
+  "Влияние на стейкхолдеров": { skillName: "Влияние на стейкхолдеров", title: "Leadership and Influence", url: "https://www.coursera.org/learn/leadership-influence", provider: "Coursera" },
+  "Лидерство без власти": { skillName: "Лидерство без власти", title: "Leadership and Influence", url: "https://www.coursera.org/learn/leadership-influence", provider: "Coursera" },
+  "Выстраивание процессов QA": { skillName: "Выстраивание процессов QA", title: "Leadership and Influence", url: "https://www.coursera.org/learn/leadership-influence", provider: "Coursera" },
+  // Сторителлинг и презентация
+  "Сторителлинг по данным": { skillName: "Сторителлинг по данным", title: "Data Storytelling", url: "https://www.coursera.org/learn/data-storytelling", provider: "Coursera" },
+  "Презентация решений": { skillName: "Презентация решений", title: "Storytelling with Data", url: "https://www.storytellingwithdata.com/", provider: "SWD", isFree: false },
+  // Эмпатия и эмоциональный интеллект
+  "Эмпатия к пользователю": { skillName: "Эмпатия к пользователю", title: "Inspiring Leadership through Emotional Intelligence", url: "https://www.coursera.org/learn/emotional-intelligence-leadership", provider: "Coursera" },
+  "Эмпатия и оценка людей": { skillName: "Эмпатия и оценка людей", title: "Inspiring Leadership through Emotional Intelligence", url: "https://www.coursera.org/learn/emotional-intelligence-leadership", provider: "Coursera" },
+  // Переговоры и работа с заказчиком
+  "Работа с заказчиком": { skillName: "Работа с заказчиком", title: "Successful Negotiation: Essential Strategies and Skills", url: "https://online.umich.edu/courses/successful-negotiation-essential-strategies-and-skills/", provider: "Michigan Online" },
+  "Переговоры со стейкхолдерами": { skillName: "Переговоры со стейкхолдерами", title: "Successful Negotiation: Essential Strategies and Skills", url: "https://online.umich.edu/courses/successful-negotiation-essential-strategies-and-skills/", provider: "Michigan Online" },
+  "Управление ожиданиями нанимающих": { skillName: "Управление ожиданиями нанимающих", title: "Successful Negotiation: Essential Strategies and Skills", url: "https://online.umich.edu/courses/successful-negotiation-essential-strategies-and-skills/", provider: "Michigan Online" },
+};
+
 const CITIES = ["Москва", "Санкт-Петербург", "Удалённо"];
 const FORMATS = ["remote", "hybrid", "office"];
 const EMPLOYMENTS = ["full", "full", "part", "project"];
@@ -399,7 +428,13 @@ async function main() {
           },
         },
         materials: {
-          create: p.materials.map((m) => ({
+          // материалы профессии + курсы под soft-навыки этой профессии (ФТ-5)
+          create: [
+            ...p.materials,
+            ...p.skills
+              .filter((s) => s.type === "soft" && SOFT_MATERIALS[s.name])
+              .map((s) => SOFT_MATERIALS[s.name]),
+          ].map((m) => ({
             skillName: m.skillName,
             title: m.title,
             url: m.url,
