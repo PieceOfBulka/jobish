@@ -180,12 +180,13 @@ model Roadmap {
 }
 
 model RoadmapStage {
-  id        String        @id @default(cuid())
-  roadmapId String
-  roadmap   Roadmap       @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
-  title     String
-  order     Int
-  steps     RoadmapStep[]
+  id          String        @id @default(cuid())
+  roadmapId   String
+  roadmap     Roadmap       @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  title       String
+  description String? // что осваивается на этапе и какой результат (ФТ-4)
+  order       Int
+  steps       RoadmapStep[]
 }
 
 model RoadmapStep {
@@ -193,6 +194,7 @@ model RoadmapStep {
   stageId       String
   stage         RoadmapStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
   skillName     String
+  skillType     String? // hard | soft (для бейджа и пояснения)
   status        String       @default("not_started") // not_started | in_progress | done
   // ФТ-4.1 — источник обучения и сроки
   materialUrl      String?

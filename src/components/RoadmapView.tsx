@@ -4,14 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink, Circle, CircleDot, CheckCircle2, Trophy,
-  Pencil, Plus, Trash2, ChevronUp, ChevronDown, Save, X,
+  Pencil, Plus, Trash2, ChevronUp, ChevronDown, Save, X, ArrowRight,
 } from "lucide-react";
+import { stepHint, type SkillType, type Grade } from "@/lib/roadmap-content";
 
 type Status = "not_started" | "in_progress" | "done";
 
 interface Step {
   id: string;
   skillName: string;
+  skillType: string | null;
   status: string;
   materialTitle: string | null;
   materialUrl: string | null;
@@ -21,7 +23,9 @@ interface Step {
   materialRating: number | null;
   estimateHours: number | null;
 }
-interface Stage { id: string; title: string; steps: Step[] }
+interface Stage { id: string; title: string; description: string | null; steps: Step[] }
+
+const STAGE_GRADES: Grade[] = ["junior", "middle", "senior"];
 
 const NEXT: Record<Status, Status> = {
   not_started: "in_progress",
@@ -53,6 +57,8 @@ export function RoadmapView({
   const allSteps = stages.flatMap((s) => s.steps);
   const done = allSteps.filter((s) => s.status === "done").length;
   const progress = allSteps.length ? Math.round((done / allSteps.length) * 100) : 0;
+  // первый незавершённый навык по порядку — «следующий рекомендуемый шаг»
+  const nextStepId = allSteps.find((s) => s.status !== "done")?.id ?? null;
 
   async function post(payload: Record<string, unknown>) {
     setBusy(true);
@@ -88,6 +94,14 @@ export function RoadmapView({
             {edit ? <><X className="h-4 w-4" /> Готово</> : <><Pencil className="h-4 w-4" /> Конструктор</>}
           </button>
         </div>
+      </div>
+
+      {/* Легенда статусов — делает карту понятнее */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 px-1 text-xs text-slate-500">
+        <span>Нажимайте на иконку слева от навыка, чтобы менять статус:</span>
+        <span className="inline-flex items-center gap-1.5"><Circle className="h-4 w-4 text-slate-300" /> Не начат</span>
+        <span className="inline-flex items-center gap-1.5"><CircleDot className="h-4 w-4 text-amber-500" /> В процессе</span>
+        <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Освоено</span>
       </div>
 
       {/* Текущий / целевой статус (ФТ-4.1) */}
@@ -136,28 +150,58 @@ export function RoadmapView({
                 )}
               </div>
 
+              {stage.description && (
+                <p className="mt-2 text-sm text-slate-500">{stage.description}</p>
+              )}
+              {stage.steps.length > 0 && (
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-brand-400 transition-all"
+                    style={{ width: `${Math.round((stageDone / stage.steps.length) * 100)}%` }}
+                  />
+                </div>
+              )}
+
               <ul className="mt-4 space-y-2">
                 {stage.steps.map((step) => {
                   const m = META[step.status as Status];
                   const Icon = m.icon;
+                  const isNext = step.id === nextStepId;
+                  const grade: Grade = STAGE_GRADES[si] ?? "senior";
                   return (
-                    <li key={step.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
+                    <li key={step.id} className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${isNext ? "border-brand-300 bg-brand-50/40" : "border-slate-100"}`}>
                       <button onClick={() => post({ action: "set_status", stepId: step.id, status: NEXT[step.status as Status] })} disabled={busy} title={`Статус: ${m.label}`} className="mt-0.5 shrink-0" aria-label={`Изменить статус навыка ${step.skillName}`}>
                         <Icon className={`h-6 w-6 ${m.cls}`} />
                       </button>
                       <div className="flex-1">
-                        <span className={`text-sm ${step.status === "done" ? "text-slate-400 line-through" : "text-ink"}`}>{step.skillName}</span>
-                        {step.materialUrl && (
-                          <a href={step.materialUrl} target="_blank" rel="noopener noreferrer" className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-brand-600 hover:underline">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`text-sm ${step.status === "done" ? "text-slate-400 line-through" : "text-ink"}`}>{step.skillName}</span>
+                          {step.skillType && (
+                            <span className={`badge ${step.skillType === "soft" ? "bg-violet-50 text-violet-700" : "bg-sky-50 text-sky-700"}`}>
+                              {step.skillType === "soft" ? "soft" : "hard"}
+                            </span>
+                          )}
+                          {isNext && (
+                            <span className="badge bg-brand-100 text-brand-700"><ArrowRight className="h-3 w-3" /> Следующий шаг</span>
+                          )}
+                        </div>
+                        {step.skillType && step.status !== "done" && (
+                          <p className="mt-0.5 text-xs text-slate-400">{stepHint(step.skillType as SkillType, grade)}</p>
+                        )}
+                        {step.materialUrl ? (
+                          <a href={step.materialUrl} target="_blank" rel="noopener noreferrer" className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-brand-600 hover:underline">
                             <ExternalLink className="h-3 w-3" /> {step.materialTitle ?? "Материал"}
                             <span className="text-slate-400">
                               {step.materialType ? `· ${step.materialType}` : ""}
                               {step.materialAuthor ? ` · ${step.materialAuthor}` : ""}
-                              {step.materialDuration ? ` · ${step.materialDuration} мин` : ""}
-                              {step.materialRating ? ` · ★ ${step.materialRating}` : ""}
                               {step.estimateHours ? ` · ~${step.estimateHours} ч` : ""}
                             </span>
                           </a>
+                        ) : (
+                          <p className="mt-1 text-xs text-slate-400">
+                            Материал не задан{step.estimateHours ? ` · ~${step.estimateHours} ч на освоение` : ""}
+                            {edit ? "" : " — добавьте ссылку через «Конструктор»."}
+                          </p>
                         )}
                       </div>
                       {edit && (

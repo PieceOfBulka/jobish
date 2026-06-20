@@ -1,11 +1,12 @@
 import "server-only";
 import { prisma } from "./prisma";
-
-const GRADE_STAGES = [
-  { key: "junior", title: "Junior — фундамент" },
-  { key: "middle", title: "Middle — уверенный специалист" },
-  { key: "senior", title: "Senior — экспертиза" },
-] as const;
+import {
+  GRADE_STAGES,
+  stageDescription,
+  estimateForSkill,
+  type Grade,
+  type SkillType,
+} from "./roadmap-content";
 
 /**
  * Генерирует (или пересоздаёт) карту развития пользователя по профессии.
@@ -44,20 +45,28 @@ export async function generateRoadmap(userId: string, slug: string) {
           );
           return {
             title: stage.title,
+            description: stageDescription(
+              stage.key,
+              profession.title,
+              stageSkills.map((s) => s.name),
+            ),
             order: si,
             steps: {
               create: stageSkills.map((s, idx) => {
                 const mat = materialBySkill.get(s.name);
+                const type = s.type as SkillType;
                 return {
                   skillName: s.name,
+                  skillType: type,
                   order: idx,
+                  // метаданные материала — только если материал реально есть
                   materialTitle: mat?.title ?? null,
                   materialUrl: mat?.url ?? null,
                   materialAuthor: mat?.provider ?? null,
                   materialType: mat ? "онлайн-курс" : null,
-                  materialDuration: mat ? 90 : null,
-                  materialRating: mat ? 4.6 : null,
-                  estimateHours: 10 + si * 5,
+                  materialDuration: null,
+                  materialRating: null,
+                  estimateHours: estimateForSkill(type, stage.key as Grade),
                 };
               }),
             },
