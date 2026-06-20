@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { OrientationQuiz } from "@/components/OrientationQuiz";
+import { ORIENTATION_QUESTIONS } from "@/lib/orientation";
 
 export const metadata = { title: "Профориентация — Jobish" };
 
@@ -16,8 +17,8 @@ export default async function OrientationPage() {
         Профориентационный тест
       </h1>
       <p className="mt-1 text-slate-600">
-        Ответьте на {6} вопросов о ваших интересах — подберём подходящие
-        профессии с уровнем соответствия.
+        Ответьте на {ORIENTATION_QUESTIONS.length} вопросов о ваших интересах —
+        подберём подходящие профессии с уровнем соответствия.
       </p>
       <div className="mt-6">
         <OrientationQuiz done={Boolean(existing)} />

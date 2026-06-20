@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ORIENTATION_QUESTIONS, type ProfessionMatch } from "@/lib/orientation";
-import { ArrowRight, ArrowLeft, RotateCcw, Trophy, Loader2 } from "lucide-react";
+import {
+  ORIENTATION_QUESTIONS,
+  ORIENTATION_METHODOLOGY,
+  randomAnswers,
+  type ProfessionMatch,
+} from "@/lib/orientation";
+import { ArrowRight, ArrowLeft, RotateCcw, Trophy, Loader2, Dice5 } from "lucide-react";
 
 export function OrientationQuiz({ done }: { done: boolean }) {
   const [step, setStep] = useState(0);
@@ -21,12 +26,12 @@ export function OrientationQuiz({ done }: { done: boolean }) {
     setAnswers((a) => ({ ...a, [q.id]: idx }));
   }
 
-  async function submit() {
+  async function submit(payload: Record<string, number> = answers) {
     setLoading(true);
     const res = await fetch("/api/orientation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers }),
+      body: JSON.stringify({ answers: payload }),
     });
     const data = await res.json();
     setLoading(false);
@@ -34,6 +39,13 @@ export function OrientationQuiz({ done }: { done: boolean }) {
       setMatches(data.matches);
       setHasStrong(data.hasStrong);
     }
+  }
+
+  // Демо: заполнить опрос случайными ответами и сразу показать результат.
+  function skip() {
+    const random = randomAnswers();
+    setAnswers(random);
+    submit(random);
   }
 
   function restart() {
@@ -140,7 +152,7 @@ export function OrientationQuiz({ done }: { done: boolean }) {
           <ArrowLeft className="h-4 w-4" /> Назад
         </button>
         {isLast ? (
-          <button onClick={submit} disabled={selected === undefined || loading} className="btn-primary">
+          <button onClick={() => submit()} disabled={selected === undefined || loading} className="btn-primary">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             Узнать результат
           </button>
@@ -149,6 +161,22 @@ export function OrientationQuiz({ done }: { done: boolean }) {
             Далее <ArrowRight className="h-4 w-4" />
           </button>
         )}
+      </div>
+
+      <div className="mt-6 border-t border-slate-100 pt-4">
+        <button
+          onClick={skip}
+          disabled={loading}
+          data-testid="orientation-skip"
+          className="btn-ghost text-slate-500"
+        >
+          <Dice5 className="h-4 w-4" /> Пропустить опрос (демо)
+        </button>
+        <p className="mt-1.5 text-xs text-slate-400">
+          Демо-режим: ответы будут заполнены случайно — чтобы быстро увидеть, как
+          выглядит результат, без прохождения всех {total} вопросов.
+        </p>
+        <p className="mt-3 text-xs text-slate-400">{ORIENTATION_METHODOLOGY}</p>
       </div>
     </div>
   );

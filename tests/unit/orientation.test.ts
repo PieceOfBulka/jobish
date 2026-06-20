@@ -3,10 +3,44 @@ import {
   scoreAnswers,
   topMatches,
   hasStrongMatch,
+  randomAnswers,
   MAX_MATCHES,
   MATCH_THRESHOLD,
   ORIENTATION_QUESTIONS,
 } from "../../src/lib/orientation";
+
+describe("ORIENTATION_QUESTIONS bank (ФТ-2.1)", () => {
+  it("contains at least 30 questions (нижняя граница 30–60)", () => {
+    expect(ORIENTATION_QUESTIONS.length).toBeGreaterThanOrEqual(30);
+  });
+
+  it("each question has a unique id and ≥2 options", () => {
+    const ids = new Set<string>();
+    for (const q of ORIENTATION_QUESTIONS) {
+      expect(q.options.length).toBeGreaterThanOrEqual(2);
+      expect(ids.has(q.id)).toBe(false);
+      ids.add(q.id);
+    }
+  });
+});
+
+describe("randomAnswers (демо «пропустить опрос»)", () => {
+  it("returns a valid option index for every question", () => {
+    const a = randomAnswers();
+    expect(Object.keys(a)).toHaveLength(ORIENTATION_QUESTIONS.length);
+    for (const q of ORIENTATION_QUESTIONS) {
+      const idx = a[q.id];
+      expect(idx).toBeGreaterThanOrEqual(0);
+      expect(idx).toBeLessThan(q.options.length);
+    }
+  });
+
+  it("produces a scorable, ranked result", () => {
+    const matches = topMatches(scoreAnswers(randomAnswers()));
+    expect(matches.length).toBeGreaterThan(0);
+    expect(matches.length).toBeLessThanOrEqual(MAX_MATCHES);
+  });
+});
 
 describe("scoreAnswers", () => {
   it("returns zeros for empty answers", () => {
