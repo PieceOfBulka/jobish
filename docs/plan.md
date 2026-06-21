@@ -28,7 +28,7 @@
 - ✅ Экран тарифов (мок-оплата)
 
 ## Этап 4 — Тестирование и проверка ✅
-- ✅ Unit-тесты (Vitest): 30 шт. — orientation, theory, streak, goals, utils
+- ✅ Unit-тесты (Vitest): 106 шт. (10 файлов) — orientation, theory, streak, goals, utils, vacancies, roadmap, salary, order, validation
 - ✅ E2E (Playwright): 7 сценариев — все ключевые потоки
 - ✅ Запуск приложения, прогон в реальном браузере, lint + build зелёные
 - ✅ Push в remote (github.com/PieceOfBulka/jobish)
@@ -40,21 +40,26 @@
 4. Remote — github.com/PieceOfBulka/jobish, push разрешён ✅
 5. Дизайн — Figma-файл недоступен коннектору → интерпретация по спецификации ✅
 
-## Этап 5 — приведение к требованиям документа (gap-анализ) ⬜
+## Этап 5 — приведение к требованиям документа (gap-анализ) 🟡
 Подробно: `docs/gap-analysis.md` (сверка реализовано vs документ от 2026-06-20).
 
 **Фаза 1 — функциональные пробелы MVP (реализуемо в текущем стеке):**
-- ⬜ ФТ-2.1/2.3: профтест 30–60 вопросов, типы (multiple/scale/text)+веса, история попыток
+- ✅ ФТ-2.1/2.3: профтест 30 вопросов (branch `feature_6_language_change`); типы вопросов (single/multiple/scale/text) + веса — реализованы (`type`, `weight`, `correctOptions` в схеме; `scoreMultiple` в `theory.ts`; 4 варианта рендера в `TheoryQuiz.tsx`)
+- ✅ NFR_U3: i18n RU/EN — реализован (`next-intl`, `messages/ru.json` + `messages/en.json`, `LanguageToggle`, `LocaleBootstrap`, middleware); все 30 вопросов профориентации переведены
+- ✅ ФТ-3.1: live-данные hh.ru — зарплаты через официальный API + Bearer-токен (merged в main)
+- ✅ ФТ-3.2: live-вакансии hh.ru с фильтрами (merged в main)
 - ⬜ ФТ-1.1: SSO-задел (`Auth_Provider` + мок-кнопки google/vk/telegram)
-- ⬜ ФТ-3.1: медиана/перцентили + город в сводке рынка
 - ⬜ US17: минимальная админка (модерация пользователей + банк вопросов)
+- ⬜ История попыток тестов (UI-экран)
 
 **Фаза 2 — нефункциональные/UX:**
-- ⬜ NFR_U3: i18n RU/EN
 - ⬜ Логирование, rate-limit на роутах
 
 **Фаза 3 — прод-архитектура (по согласованию, крупный объём):**
-- ⬜ SQLite → PostgreSQL; hh.ru API; РФ-LLM (GigaChat/YandexGPT); платежи/S3/email; кабинет коуча
+- ⬜ SQLite → PostgreSQL; РФ-LLM (GigaChat/YandexGPT); платежи/S3/email; кабинет коуча
+
+## Текущая ветка
+`feature_7_new_questions` — типы вопросов тестов (single/multiple/scale/text) + веса. Не слита в main.
 
 ## Возможные дальнейшие шаги (Release X)
 Кабинет коуча, полная админка, реальные платежи, hh.ru API, мок-интервью,

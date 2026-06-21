@@ -47,8 +47,10 @@ export default async function TakeTestPage({
             questions={test.questions.map((q) => ({
               id: q.id,
               text: q.text,
-              options: JSON.parse(q.options),
+              options: JSON.parse(q.options) as string[],
               topic: q.topic,
+              type: (q.type ?? "single") as "single" | "multiple" | "scale" | "text",
+              weight: q.weight ?? 1.0,
             }))}
           />
         )}

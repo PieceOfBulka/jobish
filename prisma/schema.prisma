@@ -234,14 +234,17 @@ model TheoryTest {
 }
 
 model TheoryQuestion {
-  id      String     @id @default(cuid())
-  testId  String
-  test    TheoryTest @relation(fields: [testId], references: [id], onDelete: Cascade)
-  text    String
-  options String     // JSON массив вариантов
-  correct Int        // индекс правильного варианта
-  topic   String
-  order   Int        @default(0)
+  id             String     @id @default(cuid())
+  testId         String
+  test           TheoryTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  text           String
+  options        String     // JSON массив вариантов
+  correct        Int        // индекс правильного варианта (для type=single)
+  correctOptions String?    // JSON: Int[] правильных индексов (для type=multiple)
+  type           String     @default("single") // single | multiple | scale | text
+  weight         Float      @default(1.0)
+  topic          String
+  order          Int        @default(0)
 }
 
 // Попытка с механикой "заморозки" при неудаче

@@ -4,6 +4,7 @@ import {
   canRetake,
   freezeRemainingMs,
   buildConclusion,
+  scoreMultiple,
   PASS_THRESHOLD,
   type GradedAnswer,
 } from "../../src/lib/theory";
@@ -12,7 +13,9 @@ function answers(correctCount: number, total: number, topic = "T"): GradedAnswer
   return Array.from({ length: total }, (_, i) => ({
     questionId: `q${i}`,
     topic,
-    correct: i < correctCount,
+    weight: 1,
+    points: i < correctCount ? 1 : 0,
+    scoreable: true,
   }));
 }
 
@@ -39,10 +42,10 @@ describe("gradeAttempt", () => {
 
   it("splits weak and strong topics", () => {
     const mixed: GradedAnswer[] = [
-      { questionId: "1", topic: "SQL", correct: true },
-      { questionId: "2", topic: "SQL", correct: true },
-      { questionId: "3", topic: "Stats", correct: false },
-      { questionId: "4", topic: "Stats", correct: false },
+      { questionId: "1", topic: "SQL", weight: 1, points: 1, scoreable: true },
+      { questionId: "2", topic: "SQL", weight: 1, points: 1, scoreable: true },
+      { questionId: "3", topic: "Stats", weight: 1, points: 0, scoreable: true },
+      { questionId: "4", topic: "Stats", weight: 1, points: 0, scoreable: true },
     ];
     const r = gradeAttempt(mixed);
     expect(r.strongTopics).toContain("SQL");
@@ -53,6 +56,52 @@ describe("gradeAttempt", () => {
     const r = gradeAttempt([]);
     expect(r.score).toBe(0);
     expect(r.passed).toBe(false);
+  });
+
+  it("ignores non-scoreable answers (scale/text) in percentage", () => {
+    const mixed: GradedAnswer[] = [
+      { questionId: "1", topic: "T", weight: 1, points: 1, scoreable: true },
+      { questionId: "2", topic: "T", weight: 1, points: 0, scoreable: true },
+      // scale question — excluded from score
+      { questionId: "3", topic: "T", weight: 1, points: 0, scoreable: false },
+    ];
+    const r = gradeAttempt(mixed);
+    expect(r.score).toBe(50); // only 2 scoreable questions
+  });
+
+  it("respects custom question weights", () => {
+    const weighted: GradedAnswer[] = [
+      { questionId: "1", topic: "T", weight: 2, points: 2, scoreable: true }, // full
+      { questionId: "2", topic: "T", weight: 1, points: 0, scoreable: true }, // wrong
+    ];
+    const r = gradeAttempt(weighted);
+    expect(r.score).toBe(67); // 2/3 * 100 rounded
+  });
+});
+
+describe("scoreMultiple", () => {
+  it("awards full weight for exact match", () => {
+    expect(scoreMultiple([0, 2], [0, 2], 4, 1)).toBe(1);
+  });
+
+  it("awards partial credit for partial correct selection", () => {
+    const score = scoreMultiple([0], [0, 2], 4, 1);
+    // correctSelected=1, correctSet=2 → 0.5 * 1 = 0.5; wrongSelected=0 → 0.5
+    expect(score).toBeCloseTo(0.5);
+  });
+
+  it("deducts for wrong selections", () => {
+    const score = scoreMultiple([0, 1], [0, 2], 4, 1);
+    // correctSelected=1/2 → 0.5; wrongSelected=1/4 → -0.25 → 0.25
+    expect(score).toBeCloseTo(0.25);
+  });
+
+  it("clamps to 0 for all-wrong selection", () => {
+    expect(scoreMultiple([1, 3], [0, 2], 4, 1)).toBe(0);
+  });
+
+  it("scales with weight", () => {
+    expect(scoreMultiple([0, 2], [0, 2], 4, 2)).toBe(2);
   });
 });
 

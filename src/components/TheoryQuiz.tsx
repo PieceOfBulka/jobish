@@ -6,12 +6,18 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Loader2, CheckCircle2, XCircle, Lock, Clock } from "lucide-react";
 
+type QuestionType = "single" | "multiple" | "scale" | "text";
+
 interface Question {
   id: string;
   text: string;
   options: string[];
   topic: string;
+  type: QuestionType;
+  weight: number;
 }
+
+type AnswerValue = number | number[] | string;
 
 interface Result {
   score: number;
@@ -38,14 +44,42 @@ export function TheoryQuiz({
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const answeredCount = Object.keys(answers).length;
+  function isAnswered(q: Question): boolean {
+    const v = answers[q.id];
+    if (v === undefined) return false;
+    if (q.type === "multiple") return Array.isArray(v) && v.length > 0;
+    if (q.type === "text") return typeof v === "string" && v.trim().length > 0;
+    return true; // single (number) and scale (number)
+  }
+
+  const answeredCount = questions.filter(isAnswered).length;
   const allAnswered = answeredCount === questions.length;
   const dateLocale = locale === "en" ? "en-US" : "ru-RU";
+
+  function setSingle(qId: string, idx: number) {
+    setAnswers((a) => ({ ...a, [qId]: idx }));
+  }
+
+  function toggleMultiple(qId: string, idx: number) {
+    setAnswers((prev) => {
+      const cur = (prev[qId] as number[] | undefined) ?? [];
+      const next = cur.includes(idx) ? cur.filter((i) => i !== idx) : [...cur, idx];
+      return { ...prev, [qId]: next };
+    });
+  }
+
+  function setScale(qId: string, val: number) {
+    setAnswers((a) => ({ ...a, [qId]: val }));
+  }
+
+  function setText(qId: string, val: string) {
+    setAnswers((a) => ({ ...a, [qId]: val }));
+  }
 
   async function submit() {
     setLoading(true);
@@ -159,25 +193,100 @@ export function TheoryQuiz({
           <div key={q.id} className="card p-6">
             <p className="font-medium text-ink">
               {qi + 1}. {q.text}
+              {q.weight !== 1 && (
+                <span className="ml-2 text-xs font-normal text-slate-400">×{q.weight}</span>
+              )}
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {q.options.map((o, idx) => {
-                const sel = answers[q.id] === idx;
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => setAnswers((a) => ({ ...a, [q.id]: idx }))}
-                    className={`rounded-xl border px-4 py-2.5 text-left text-sm transition-all ${
-                      sel
-                        ? "border-brand-500 bg-brand-50 text-brand-800"
-                        : "border-slate-200 hover:border-brand-300 hover:bg-slate-50"
-                    }`}
-                  >
-                    {o}
-                  </button>
-                );
-              })}
-            </div>
+
+            {/* single — radio-style buttons (existing behaviour) */}
+            {q.type === "single" && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {q.options.map((o, idx) => {
+                  const sel = answers[q.id] === idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setSingle(q.id, idx)}
+                      className={`rounded-xl border px-4 py-2.5 text-left text-sm transition-all ${
+                        sel
+                          ? "border-brand-500 bg-brand-50 text-brand-800"
+                          : "border-slate-200 hover:border-brand-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      {o}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* multiple — checkbox-style buttons */}
+            {q.type === "multiple" && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {q.options.map((o, idx) => {
+                  const selected = (answers[q.id] as number[] | undefined) ?? [];
+                  const checked = selected.includes(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => toggleMultiple(q.id, idx)}
+                      className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-left text-sm transition-all ${
+                        checked
+                          ? "border-brand-500 bg-brand-50 text-brand-800"
+                          : "border-slate-200 hover:border-brand-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className={`grid h-4 w-4 shrink-0 place-items-center rounded border-2 ${checked ? "border-brand-500 bg-brand-500" : "border-slate-300"}`}>
+                        {checked && (
+                          <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                      {o}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* scale — range slider 1-10 */}
+            {q.type === "scale" && (
+              <div className="mt-4">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={(answers[q.id] as number | undefined) ?? 5}
+                    onChange={(e) => setScale(q.id, Number(e.target.value))}
+                    onMouseDown={() => {
+                      if (answers[q.id] === undefined) setScale(q.id, 5);
+                    }}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-500"
+                  />
+                  <span className="w-8 shrink-0 text-center text-lg font-bold text-brand-600">
+                    {(answers[q.id] as number | undefined) ?? "—"}
+                  </span>
+                </div>
+                <div className="mt-1 flex justify-between text-xs text-slate-400">
+                  <span>1</span>
+                  <span>10</span>
+                </div>
+              </div>
+            )}
+
+            {/* text — textarea */}
+            {q.type === "text" && (
+              <textarea
+                className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                rows={4}
+                placeholder="Введите ответ..."
+                value={(answers[q.id] as string | undefined) ?? ""}
+                onChange={(e) => setText(q.id, e.target.value)}
+              />
+            )}
           </div>
         ))}
       </div>

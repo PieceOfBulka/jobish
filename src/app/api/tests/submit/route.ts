@@ -7,13 +7,22 @@ import {
   canRetake,
   buildConclusion,
   shouldLowerDifficulty,
+  scoreMultiple,
   type GradedAnswer,
 } from "@/lib/theory";
 
+const answerValue = z.union([
+  z.number().int().min(0),          // single (option index) or scale (1-10)
+  z.array(z.number().int().min(0)), // multiple (option indices)
+  z.string(),                       // text
+]);
+
 const schema = z.object({
   testId: z.string().min(1),
-  answers: z.record(z.string(), z.number().int().min(0)),
+  answers: z.record(z.string(), answerValue),
 });
+
+type AnswerValue = z.infer<typeof answerValue>;
 
 export async function POST(req: NextRequest) {
   const userId = await getUserId();
@@ -43,11 +52,31 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const graded: GradedAnswer[] = test.questions.map((q) => ({
-    questionId: q.id,
-    topic: q.topic,
-    correct: answers[q.id] === q.correct,
-  }));
+  const graded: GradedAnswer[] = test.questions.map((q) => {
+    const raw: AnswerValue | undefined = answers[q.id];
+    const weight = q.weight;
+    const qType = q.type ?? "single";
+
+    if (qType === "scale" || qType === "text") {
+      return { questionId: q.id, topic: q.topic, weight, points: 0, scoreable: false };
+    }
+
+    if (qType === "multiple") {
+      const selected = Array.isArray(raw) ? raw : [];
+      const correctSet: number[] = q.correctOptions
+        ? (JSON.parse(q.correctOptions) as number[])
+        : [q.correct];
+      const totalOptions = (JSON.parse(q.options) as unknown[]).length;
+      const points = scoreMultiple(selected, correctSet, totalOptions, weight);
+      return { questionId: q.id, topic: q.topic, weight, points, scoreable: true };
+    }
+
+    // single (default)
+    const selectedIdx = typeof raw === "number" ? raw : -1;
+    const points = selectedIdx === q.correct ? weight : 0;
+    return { questionId: q.id, topic: q.topic, weight, points, scoreable: true };
+  });
+
   const result = gradeAttempt(graded);
 
   // Если была доступная доп. попытка из-за заморозки — расходуем её
@@ -93,6 +122,10 @@ export async function POST(req: NextRequest) {
     provider: m.provider,
   }));
 
+  // correctCount — только для scoreable single/multiple (exact match = full weight earned)
+  const scoreableGraded = graded.filter((g) => g.scoreable);
+  const correctCount = scoreableGraded.filter((g) => g.points >= g.weight).length;
+
   return NextResponse.json({
     ok: true,
     score: result.score,
@@ -100,8 +133,8 @@ export async function POST(req: NextRequest) {
     weakTopics: result.weakTopics,
     strongTopics: result.strongTopics,
     frozenUntil: result.frozenUntil,
-    total: test.questions.length,
-    correctCount: graded.filter((g) => g.correct).length,
+    total: scoreableGraded.length,
+    correctCount,
     conclusion: buildConclusion(result.score, result.passed, result.weakTopics),
     recommendations,
   });

@@ -18,7 +18,12 @@ export function personalTestSize(lowered: boolean): number {
 export interface GradedAnswer {
   questionId: string;
   topic: string;
-  correct: boolean;
+  /** Максимально возможный балл за вопрос (= question.weight). */
+  weight: number;
+  /** Полученный балл (0..weight). */
+  points: number;
+  /** false для scale/text — не участвуют в итоговом проценте. */
+  scoreable: boolean;
 }
 
 export interface AttemptResult {
@@ -33,22 +38,24 @@ export function gradeAttempt(
   answers: GradedAnswer[],
   now: Date = new Date(),
 ): AttemptResult {
-  const total = answers.length;
-  const correctCount = answers.filter((a) => a.correct).length;
-  const score = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+  const scoreable = answers.filter((a) => a.scoreable);
+  const totalWeight = scoreable.reduce((s, a) => s + a.weight, 0);
+  const earnedWeight = scoreable.reduce((s, a) => s + a.points, 0);
+  const score = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0;
   const passed = score >= PASS_THRESHOLD;
 
-  const byTopic = new Map<string, { ok: number; total: number }>();
-  for (const a of answers) {
-    const t = byTopic.get(a.topic) ?? { ok: 0, total: 0 };
-    t.total += 1;
-    if (a.correct) t.ok += 1;
+  // Агрегируем по темам (только scoreable вопросы)
+  const byTopic = new Map<string, { earned: number; max: number }>();
+  for (const a of scoreable) {
+    const t = byTopic.get(a.topic) ?? { earned: 0, max: 0 };
+    t.earned += a.points;
+    t.max += a.weight;
     byTopic.set(a.topic, t);
   }
   const weakTopics: string[] = [];
   const strongTopics: string[] = [];
-  for (const [topic, { ok, total: t }] of byTopic) {
-    if (ok / t < 0.5) weakTopics.push(topic);
+  for (const [topic, { earned, max }] of byTopic) {
+    if (max === 0 || earned / max < 0.5) weakTopics.push(topic);
     else strongTopics.push(topic);
   }
 
@@ -94,4 +101,25 @@ export function freezeRemainingMs(
 ): number {
   if (!frozenUntil) return 0;
   return Math.max(0, frozenUntil.getTime() - now.getTime());
+}
+
+// ─── Скоринг multiple-choice ──────────────────────────────────────────────────
+
+/**
+ * Частичный зачёт для multiple: вычитаем за неверные выборы.
+ * Итог зажат в [0, weight].
+ */
+export function scoreMultiple(
+  selected: number[],
+  correctSet: number[],
+  totalOptions: number,
+  weight: number,
+): number {
+  const correctSetOf = new Set(correctSet);
+  const correctSelected = selected.filter((i) => correctSetOf.has(i)).length;
+  const wrongSelected = selected.filter((i) => !correctSetOf.has(i)).length;
+
+  const partial = (correctSelected / correctSet.length) * weight
+    - (wrongSelected / totalOptions) * weight;
+  return Math.max(0, partial);
 }
