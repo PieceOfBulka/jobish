@@ -1,18 +1,19 @@
+import { getTranslations } from "next-intl/server";
 import { SupportForm } from "@/components/SupportForm";
-import { getCurrentUser } from "@/lib/auth";
 
-export const metadata = { title: "Поддержка — Jobish" };
+export async function generateMetadata() {
+  const t = await getTranslations("metadata");
+  return { title: t("support") };
+}
 
 export default async function SupportPage() {
-  const user = await getCurrentUser();
+  const t = await getTranslations("support");
   return (
     <div className="container-page max-w-xl py-16">
-      <h1 className="text-3xl font-bold tracking-tight text-ink">Поддержка</h1>
-      <p className="mt-3 text-slate-600">
-        Опишите проблему или вопрос — ответим на вашу почту в течение 24 часов.
-      </p>
+      <h1 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">{t("title")}</h1>
+      <p className="mt-3 text-slate-600">{t("subtitle")}</p>
       <div className="mt-8">
-        <SupportForm defaultEmail={user?.email ?? ""} />
+        <SupportForm />
       </div>
     </div>
   );

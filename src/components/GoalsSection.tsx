@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2, Target, Sparkles } from "lucide-react";
 
 interface Goal {
@@ -18,6 +19,8 @@ export function GoalsSection({
   initial: Goal[];
   hasTrack: boolean;
 }) {
+  const t = useTranslations("goals");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [goals, setGoals] = useState<Goal[]>(initial);
   const [loading, setLoading] = useState(false);
@@ -30,7 +33,7 @@ export function GoalsSection({
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError(data.error ?? "Ошибка");
+      setError(data.error ?? tCommon("error"));
       return;
     }
     setGoals(data.goals);
@@ -42,17 +45,17 @@ export function GoalsSection({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Target className="h-5 w-5 text-brand-600" />
-          <h2 className="font-semibold text-ink">Карьерные цели</h2>
+          <h2 className="font-semibold text-ink">{t("title")}</h2>
         </div>
         <button onClick={generate} disabled={loading || !hasTrack} className="btn-outline">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {goals.length ? "Обновить" : "Сгенерировать"}
+          {goals.length ? tCommon("update") : t("generate")}
         </button>
       </div>
 
       {!hasTrack && (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
-          Выберите трек развития, чтобы сгенерировать цели на его основе.
+          {t("selectTrackWarning")}
         </p>
       )}
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -71,10 +74,7 @@ export function GoalsSection({
         </ul>
       ) : (
         hasTrack && (
-          <p className="mt-4 text-sm text-slate-500">
-            Целей пока нет. Нажмите «Сгенерировать», чтобы получить долгосрочные
-            цели на основе вашего трека и опыта.
-          </p>
+          <p className="mt-4 text-sm text-slate-500">{t("empty")}</p>
         )
       )}
     </div>

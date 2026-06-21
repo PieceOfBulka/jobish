@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, TrendingUp } from "lucide-react";
 
 interface Summary {
@@ -19,19 +20,22 @@ interface Resp {
   summary: Summary | null;
 }
 
-const AREAS = [
-  { id: "113", label: "Вся Россия" },
-  { id: "1", label: "Москва" },
-  { id: "2", label: "Санкт-Петербург" },
+const AREA_KEYS = [
+  { id: "113", key: "allRussia" as const },
+  { id: "1", key: "moscow" as const },
+  { id: "2", key: "spb" as const },
 ];
 
-const rub = (n: number) =>
-  new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(n) + " ₽";
-
 export function SalaryStats({ slug }: { slug: string }) {
+  const t = useTranslations("salary");
+  const locale = useLocale();
   const [area, setArea] = useState("113");
   const [data, setData] = useState<Resp | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const numberLocale = locale === "en" ? "en-US" : "ru-RU";
+  const rub = (n: number) =>
+    new Intl.NumberFormat(numberLocale, { maximumFractionDigits: 0 }).format(n) + " ₽";
 
   useEffect(() => {
     let alive = true;
@@ -63,10 +67,10 @@ export function SalaryStats({ slug }: { slug: string }) {
     <div className="card p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <TrendingUp className="h-4 w-4 text-brand-500" /> Зарплаты: медиана и перцентили
+          <TrendingUp className="h-4 w-4 text-brand-500" /> {t("title")}
         </p>
         <div className="flex flex-wrap gap-1">
-          {AREAS.map((a) => (
+          {AREA_KEYS.map((a) => (
             <button
               key={a.id}
               onClick={() => selectArea(a.id)}
@@ -74,7 +78,7 @@ export function SalaryStats({ slug }: { slug: string }) {
                 area === a.id ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {a.label}
+              {t(a.key)}
             </button>
           ))}
         </div>
@@ -82,26 +86,26 @@ export function SalaryStats({ slug }: { slug: string }) {
 
       {loading ? (
         <div className="mt-6 flex items-center gap-2 text-sm text-slate-400">
-          <Loader2 className="h-4 w-4 animate-spin" /> Загрузка данных…
+          <Loader2 className="h-4 w-4 animate-spin" /> {t("loading")}
         </div>
       ) : s ? (
         <>
           <div className="mt-4 flex items-end gap-2">
             <span className="text-3xl font-bold text-ink">{rub(s.median)}</span>
-            <span className="pb-1 text-xs text-slate-400">медиана</span>
+            <span className="pb-1 text-xs text-slate-400">{t("median")}</span>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-            <Stat label="25-й перцентиль" value={rub(s.p25)} hint="ниже — четверть" />
-            <Stat label="75-й перцентиль" value={rub(s.p75)} hint="выше — четверть" />
-            <Stat label="90-й перцентиль" value={rub(s.p90)} hint="топ-офферы" />
+            <Stat label={t("p25")} value={rub(s.p25)} hint={t("p25hint")} />
+            <Stat label={t("p75")} value={rub(s.p75)} hint={t("p75hint")} />
+            <Stat label={t("p90")} value={rub(s.p90)} hint={t("p90hint")} />
           </div>
           <p className="mt-4 text-xs text-slate-400">
-            Источник: {data?.source}
-            {typeof s.count === "number" ? ` · выборка: ${s.count} вакансий` : ""}
+            {t("source", { source: data?.source ?? "" })}
+            {typeof s.count === "number" ? t("sample", { count: s.count }) : ""}
           </p>
         </>
       ) : (
-        <p className="mt-6 text-sm text-slate-400">Данных по зарплатам пока нет.</p>
+        <p className="mt-6 text-sm text-slate-400">{t("noData")}</p>
       )}
     </div>
   );

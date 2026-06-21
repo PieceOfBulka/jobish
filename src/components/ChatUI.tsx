@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useId } from "react";
+import { useTranslations } from "next-intl";
 import { Send, Loader2, Sparkles } from "lucide-react";
 
 interface Msg {
@@ -9,14 +10,9 @@ interface Msg {
   content: string;
 }
 
-const SUGGESTIONS = [
-  "Помоги выбрать направление в IT",
-  "Какие навыки нужны для моего трека?",
-  "Сформулируй мои карьерные цели",
-  "Стоит ли мне менять работу?",
-];
-
 export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: boolean }) {
+  const t = useTranslations("coach");
+  const tCommon = useTranslations("common");
   const [messages, setMessages] = useState<Msg[]>(initial);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,6 +20,8 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
   const bottomRef = useRef<HTMLDivElement>(null);
   const tmpId = useId();
   const seq = useRef(0);
+
+  const suggestions = [0, 1, 2, 3].map((i) => t(`suggestions.${i}`));
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,7 +44,7 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError(data.error ?? "Ошибка");
+      setError(data.error ?? tCommon("error"));
       return;
     }
     setMessages((m) => [
@@ -57,20 +55,16 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col">
-      {/* Messages */}
       <div className="flex-1 space-y-4 overflow-y-auto pb-4">
         {messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-600 text-white">
               <Sparkles className="h-7 w-7" />
             </span>
-            <h2 className="mt-4 text-lg font-semibold text-ink">Чем могу помочь?</h2>
-            <p className="mt-1 max-w-sm text-sm text-slate-500">
-              Я — Jobish AI, ваш карьерный коуч. Спросите о выборе профессии,
-              навыках или целях развития.
-            </p>
+            <h2 className="mt-4 text-lg font-semibold text-ink">{t("emptyTitle")}</h2>
+            <p className="mt-1 max-w-sm text-sm text-slate-500">{t("emptyText")}</p>
             <div className="mt-5 grid max-w-lg gap-2 sm:grid-cols-2">
-              {SUGGESTIONS.map((s) => (
+              {suggestions.map((s) => (
                 <button key={s} onClick={() => send(s)} className="rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm text-slate-600 transition-colors hover:border-brand-300 hover:bg-brand-50">
                   {s}
                 </button>
@@ -96,7 +90,7 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
         {loading && (
           <div className="flex justify-start">
             <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm text-slate-400">
-              <Loader2 className="h-4 w-4 animate-spin" /> Коуч печатает…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t("typing")}
             </div>
           </div>
         )}
@@ -107,7 +101,6 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
         <p role="alert" className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
 
-      {/* Input */}
       <form
         onSubmit={(e) => { e.preventDefault(); send(input); }}
         className="flex items-end gap-2 border-t border-slate-100 bg-canvas pt-4"
@@ -119,7 +112,7 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
             if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
           }}
           rows={1}
-          placeholder="Напишите сообщение…"
+          placeholder={t("placeholder")}
           className="input max-h-32 flex-1 resize-none"
         />
         <button type="submit" disabled={loading || !input.trim()} className="btn-primary h-11 px-4">
@@ -127,9 +120,7 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
         </button>
       </form>
       {!llmEnabled && (
-        <p className="mt-2 text-center text-xs text-slate-400">
-          Демо-движок коуча. Подключите OPENROUTER_API_KEY для ответов реальной модели.
-        </p>
+        <p className="mt-2 text-center text-xs text-slate-400">{t("demoNote")}</p>
       )}
     </div>
   );

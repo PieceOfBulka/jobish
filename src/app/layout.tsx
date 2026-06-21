@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { LocaleBootstrap } from "@/components/LocaleBootstrap";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,20 +11,30 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Jobish — карьерный коуч-консультант",
-  description:
-    "Персонализированный путь профессионального развития: AI-коуч, карта развития, тесты и аналитика рынка труда.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("siteTitle"),
+    description: t("siteDescription"),
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="ru" className={`${inter.variable} h-full`}>
+    <html lang={locale} className={`${inter.variable} h-full`}>
       {/* suppressHydrationWarning: браузерные расширения добавляют атрибуты
           к <body> (напр. data-gptw) до гидратации React — это не наша рассинхронизация. */}
-      <body className="min-h-full" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full" suppressHydrationWarning>
+        <NextIntlClientProvider messages={messages}>
+          <LocaleBootstrap />
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

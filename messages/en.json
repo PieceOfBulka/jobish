@@ -1,0 +1,743 @@
+{
+  "metadata": {
+    "siteTitle": "Jobish — career coaching platform",
+    "siteDescription": "A personalized career development path: AI coach, development roadmap, tests, and labor market analytics.",
+    "dashboard": "Dashboard — Jobish",
+    "coach": "AI Coach — Jobish",
+    "orientation": "Career Orientation — Jobish",
+    "roadmap": "Development Roadmap — Jobish",
+    "vacancies": "Vacancies — Jobish",
+    "tests": "Tests — Jobish",
+    "profile": "Profile — Jobish",
+    "login": "Sign In — Jobish",
+    "register": "Sign Up — Jobish",
+    "pricing": "Pricing — Jobish",
+    "support": "Support — Jobish",
+    "verify": "Email Verification — Jobish",
+    "professions": "Professions — Jobish"
+  },
+  "nav": {
+    "features": "Features",
+    "professions": "Professions",
+    "pricing": "Pricing",
+    "dashboard": "Dashboard",
+    "login": "Sign In",
+    "register": "Start for Free",
+    "sidebarDashboard": "Dashboard",
+    "sidebarCoach": "AI Coach",
+    "sidebarOrientation": "Career Orientation",
+    "sidebarRoadmap": "Development Roadmap",
+    "sidebarVacancies": "Vacancies",
+    "sidebarTests": "Tests",
+    "sidebarProfile": "Profile",
+    "logout": "Sign Out",
+    "planLabel": "Plan: {plan}",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "plans": {
+    "free": {
+      "name": "Basic",
+      "period": "forever",
+      "features": [
+        "Career orientation test",
+        "Development roadmap for your track",
+        "Up to 10 coach messages per day",
+        "Basic market analytics"
+      ]
+    },
+    "start": {
+      "name": "Start",
+      "period": "week",
+      "features": [
+        "Unlimited coach messages",
+        "All assessment tests",
+        "Test unfreezing",
+        "Full market analytics"
+      ]
+    },
+    "optimal": {
+      "name": "Optimal",
+      "period": "month",
+      "features": [
+        "Everything in Start",
+        "Priority coach responses",
+        "Extended material recommendations",
+        "Unlimited chat history"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "period": "3 months",
+      "features": [
+        "Everything in Optimal",
+        "Best value for the period",
+        "Early access to new features",
+        "Priority support"
+      ]
+    },
+    "popular": "Popular",
+    "currentPlan": "Current plan",
+    "subscribed": "Subscribed ✓",
+    "includedByDefault": "Included by default",
+    "subscribeDemo": "Subscribe (demo)",
+    "freePrice": "0 ₽"
+  },
+  "vacancies": {
+    "format": {
+      "remote": "Remote",
+      "hybrid": "Hybrid",
+      "office": "Office"
+    },
+    "employment": {
+      "full": "Full-time",
+      "part": "Part-time",
+      "project": "Project-based"
+    },
+    "profession": "Profession",
+    "city": "City",
+    "company": "Company",
+    "formatLabel": "Format",
+    "salaryFrom": "Salary from, ₽",
+    "salaryTo": "Salary to, ₽",
+    "experienceMax": "Experience up to, years",
+    "employmentLabel": "Employment",
+    "anyF": "Any",
+    "anyM": "Any",
+    "searchPlaceholder": "Search by name",
+    "applyFilters": "Apply filters",
+    "reset": "Reset",
+    "title": "Job Search",
+    "liveMode": "Live vacancies from the official hh.ru API. Filter by city, salary, format, and experience.",
+    "demoMode": "Demo database (select a profession for live hh.ru vacancies). Filter by profession, city, salary, and experience.",
+    "personalized": "Showing vacancies for your track. Change filters to browse others.",
+    "found": "Found: {count}",
+    "source": "· source: {source}",
+    "sourceLive": "hh.ru (official API)",
+    "sourceDemo": "demo database",
+    "experienceFrom": "experience from {years} years",
+    "salaryNotSpecified": "salary not specified",
+    "empty": "No vacancies match your filters. Try relaxing the criteria."
+  },
+  "footer": {
+    "tagline": "A transparent, personalized professional development path. AI coach, development roadmap, tests, and labor market analytics in one place.",
+    "disclaimer": "HSE University student project «IT Consulting». Demo version: payments, market data, and some integrations are mocked.",
+    "product": "Product",
+    "professions": "Professions",
+    "pricing": "Pricing",
+    "register": "Sign Up",
+    "support": "Support",
+    "segments": "Segments",
+    "segmentGraduates": "Graduates and young professionals",
+    "segmentCareerChange": "Experienced professionals changing fields",
+    "madeWithCare": "Made with care for your career"
+  },
+  "common": {
+    "error": "Error",
+    "somethingWrong": "Something went wrong",
+    "networkError": "Network error. Please try again.",
+    "save": "Save",
+    "saved": "Saved",
+    "update": "Update",
+    "done": "Done",
+    "back": "Back",
+    "next": "Next",
+    "details": "Learn more",
+    "salary": "Salary:",
+    "demand": "demand {level}",
+    "hiring": "hiring {level}",
+    "dash": "—"
+  },
+  "landing": {
+    "badge": "Career coaching platform",
+    "heroTitle": "A clear path to your",
+    "heroHighlight": "dream career",
+    "heroDescription": "Jobish handles analysis and structuring of profession data. You get a personal development plan, an AI coach, and honest labor market analytics.",
+    "startFree": "Start for Free",
+    "viewProfessions": "Browse Professions",
+    "noCard": "No card required. Basic access is free forever.",
+    "segmentGraduatesTitle": "For graduates and beginners",
+    "segmentGraduatesText": "Find your direction early and land in your desired field with a clear plan.",
+    "segmentExperiencedTitle": "For experienced career changers",
+    "segmentExperiencedText": "Switch to a new profession without chaos: assess your current job and build a transition route.",
+    "featuresTitle": "Everything for career growth",
+    "featuresSubtitle": "Seven key MVP features that guide you from choice to results.",
+    "howTitle": "How it works",
+    "howSubtitle": "Four steps to a clear trajectory.",
+    "ctaTitle": "Start building your career today",
+    "ctaText": "Registration takes a minute. Career orientation and development roadmap are already in the free plan.",
+    "createAccount": "Create Account",
+    "features": {
+      "coach": {
+        "title": "AI coach in chat",
+        "text": "Personal dialogue: helps choose a direction, set goals, and stay motivated."
+      },
+      "orientation": {
+        "title": "Career orientation",
+        "text": "An interests and aptitudes test suggests up to 10 matching professions with fit scores."
+      },
+      "roadmap": {
+        "title": "Development roadmap",
+        "text": "A step-by-step track path: skills by grade, materials, and checkpoints."
+      },
+      "tests": {
+        "title": "Assessment tests",
+        "text": "Track progress by stage. Weak topics are highlighted so you know what to improve."
+      },
+      "market": {
+        "title": "Market analytics",
+        "text": "Salaries by grade, demand, and top companies — for an informed choice."
+      },
+      "progress": {
+        "title": "Progress and motivation",
+        "text": "Skill tracker, login streaks, and coach support keep you focused on your goal."
+      }
+    },
+    "steps": {
+      "1": {
+        "title": "Take career orientation",
+        "text": "Answer a few questions — get matching professions."
+      },
+      "2": {
+        "title": "Choose a track",
+        "text": "Study market analytics and set your development goal."
+      },
+      "3": {
+        "title": "Follow the roadmap",
+        "text": "Learn skills, take tests, track progress."
+      },
+      "4": {
+        "title": "Grow with the coach",
+        "text": "The AI coach helps at every step and keeps you motivated."
+      }
+    }
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "loginSubtitle": "Sign in to continue your development.",
+    "demoAccess": "Demo access:",
+    "createAccountTitle": "Create an account",
+    "registerSubtitle": "Basic access is free. No credit card required.",
+    "name": "Name",
+    "namePlaceholder": "What should we call you?",
+    "email": "Email",
+    "password": "Password",
+    "passwordConfirm": "Confirm password",
+    "passwordHint": "More than 8 characters, letters, digits, and a special symbol.",
+    "login": "Sign In",
+    "createAccount": "Create Account",
+    "noAccount": "No account?",
+    "registerLink": "Sign up",
+    "hasAccount": "Already have an account?"
+  },
+  "verify": {
+    "title": "Verify your email",
+    "description": "We sent a code to {email}. Enter it to access the platform.",
+    "codeLabel": "Verification code",
+    "codePlaceholder": "6-digit code",
+    "demoCode": "Demo mode: no email is sent. Your code: {code}",
+    "submit": "Verify email",
+    "resend": "Resend code"
+  },
+  "pricing": {
+    "title": "Simple, honest pricing",
+    "subtitle": "Start for free. Paid plans remove limits and unlock all coach and test features.",
+    "demoNote": "Demo mode: payment is mocked, no real charges occur."
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Describe your issue or question — we'll reply to your email within 24 hours.",
+    "emailLabel": "Reply email",
+    "subjectLabel": "Subject",
+    "messageLabel": "Message",
+    "submit": "Submit request",
+    "successTitle": "Request submitted",
+    "successText": "We'll reply to your email within 24 hours."
+  },
+  "professions": {
+    "catalogTitle": "Profession catalog",
+    "catalogSubtitle": "Explore market requirements, salaries by grade, and required skills. Choose a track to build your personal development roadmap.",
+    "backToAll": "← All professions",
+    "trialTest": "Trial test",
+    "marketAnalytics": "Market analytics",
+    "openVacancies": "Open vacancies",
+    "marketDemand": "Market demand",
+    "salaryDynamics": "Salary dynamics (6 mo.)",
+    "topCompanies": "Top hiring companies",
+    "keyDuties": "Key responsibilities",
+    "typicalDay": "Typical workday",
+    "transitionDifficulty": "Transition difficulty",
+    "learningTime": "Expected learning time: ~{months} mo.",
+    "typicalTasks": "Typical tasks",
+    "portfolioCases": "Portfolio case studies",
+    "requiredSkills": "Required skills",
+    "hardSkills": "Hard skills by grade",
+    "softSkills": "Soft skills",
+    "starterMaterials": "Starter materials",
+    "currentTrack": "This is your current track",
+    "chooseTrack": "Choose as development track",
+    "trackError": "Failed to create track. Please try again.",
+    "networkError": "Network unavailable. Please try again."
+  },
+  "dashboard": {
+    "greeting": "Hi, {name}! 👋",
+    "trackActive": "Your track: {track}. Keep up the great work!",
+    "startOrientation": "Start with career orientation to find your direction.",
+    "streakDays": "day streak",
+    "roadmapProgress": "Roadmap progress",
+    "skillsProgress": "{done} of {total} skills mastered",
+    "roadmapNotCreated": "Roadmap not created yet",
+    "orientation": "Career orientation",
+    "orientationDone": "Test completed — see recommendations",
+    "orientationNotDone": "Not completed yet",
+    "retake": "Retake",
+    "takeTest": "Take the test",
+    "lastTest": "Last test",
+    "testPassed": "✓ passed",
+    "testFailed": "— needs improvement",
+    "noTestsYet": "Not taken yet",
+    "toTests": "Go to tests",
+    "talkToCoach": "Talk to AI coach",
+    "talkToCoachDesc": "Discuss goals, skills, and your next development step.",
+    "openRoadmap": "Open development roadmap",
+    "chooseTrack": "Choose development track",
+    "openRoadmapDesc": "Track progress and go to materials.",
+    "chooseTrackDesc": "Choose a profession and build a roadmap."
+  },
+  "coach": {
+    "title": "AI Coach",
+    "emptyTitle": "How can I help?",
+    "emptyText": "I'm Jobish AI, your career coach. Ask about choosing a profession, skills, or development goals.",
+    "typing": "Coach is typing…",
+    "placeholder": "Write a message…",
+    "demoNote": "Demo coach engine. Connect OPENROUTER_API_KEY for real model responses.",
+    "suggestions": {
+      "0": "Help me choose an IT direction",
+      "1": "What skills do I need for my track?",
+      "2": "Help me define my career goals",
+      "3": "Should I change jobs?"
+    }
+  },
+  "orientationPage": {
+    "title": "Career orientation test",
+    "subtitle": "Answer {count} questions about your interests — we'll suggest matching professions with fit scores.",
+    "resultsTitle": "Your matching professions",
+    "resultsSubtitle": "Sorted by fit score. Open a card and choose a track.",
+    "noStrongMatch": "No strong matches found — results are advisory. You can retake the test or discuss your choice with the AI coach.",
+    "retake": "Retake",
+    "alreadyDone": "You've already taken this test. You can retake it to refresh recommendations.",
+    "questionProgress": "Question {current} of {total}",
+    "getResult": "See results",
+    "skipDemo": "Skip survey (demo)",
+    "skipHelp": "Demo mode: answers will be filled randomly — to quickly see what results look like without all {total} questions.",
+    "questions": {
+      "q1": {
+        "text": "What interests you most at work?",
+        "options": [
+          "Building and programming products",
+          "Finding patterns in numbers",
+          "Coming up with visual solutions",
+          "Organising processes and people"
+        ]
+      },
+      "q2": {
+        "text": "What task would you enjoy most on a weekend?",
+        "options": [
+          "Build a side project or automate a routine",
+          "Dig into a large dataset and draw conclusions",
+          "Redesign a favourite app's interface",
+          "Help a friend plan a launch idea"
+        ]
+      },
+      "q3": {
+        "text": "How do you prefer to solve problems?",
+        "options": [
+          "Logically, through code and algorithms",
+          "Through data and metrics analysis",
+          "Through empathy with the user",
+          "Through negotiation and compromise"
+        ]
+      },
+      "q4": {
+        "text": "What feedback motivates you more?",
+        "options": [
+          "'Your code runs fast and clean'",
+          "'Your analysis helped make a decision'",
+          "'This looks great and is easy to use'",
+          "'You're a pleasure to work with'"
+        ]
+      },
+      "q5": {
+        "text": "What fits you better when working in a team?",
+        "options": [
+          "Deep-diving into a technical problem",
+          "Owning product priorities and the roadmap",
+          "Designing the user experience",
+          "Coordinating people and removing blockers"
+        ]
+      },
+      "q6": {
+        "text": "What result gives you the most satisfaction?",
+        "options": [
+          "A working system you built yourself",
+          "A dashboard the whole team watches",
+          "A product that's a pleasure to use",
+          "A team that reached its goal together"
+        ]
+      },
+      "q7": {
+        "text": "Which project would you pick at a hackathon?",
+        "options": [
+          "Write a backend service from scratch",
+          "Build an ML model on competition data",
+          "Create a memorable visual prototype",
+          "Assemble a team and assign roles"
+        ]
+      },
+      "q8": {
+        "text": "What do you enjoy learning in your spare time?",
+        "options": [
+          "A new programming language or framework",
+          "Statistics and data-processing methods",
+          "Typography and composition principles",
+          "Negotiation psychology and leadership"
+        ]
+      },
+      "q9": {
+        "text": "What role do you usually take in group projects?",
+        "options": [
+          "I write the main technical part",
+          "I calculate metrics and test hypotheses",
+          "I'm responsible for look and presentation",
+          "I track deadlines and agreements"
+        ]
+      },
+      "q10": {
+        "text": "What annoys you most at work?",
+        "options": [
+          "Unoptimised, slow code",
+          "Decisions made without data",
+          "An ugly, inconvenient interface",
+          "Misalignment within the team"
+        ]
+      },
+      "q11": {
+        "text": "What do you most enjoy reading professional articles about?",
+        "options": [
+          "System architecture and algorithms",
+          "Analytics case studies and A/B tests",
+          "Design trends and UX research",
+          "Product management and strategy"
+        ]
+      },
+      "q12": {
+        "text": "Which 'superpower' is closest to you?",
+        "options": [
+          "Understanding any technology",
+          "Seeing a pattern in a sea of numbers",
+          "Making complex things beautiful and clear",
+          "Uniting people around a goal"
+        ]
+      },
+      "q13": {
+        "text": "What are you most often praised for?",
+        "options": [
+          "Technical solutions",
+          "Accuracy and attention to detail",
+          "Taste and neatness",
+          "Ability to negotiate"
+        ]
+      },
+      "q14": {
+        "text": "Which course would you take first?",
+        "options": [
+          "'Production Python Development'",
+          "'Data Analytics and SQL'",
+          "'UX/UI Design from Scratch'",
+          "'IT Product Management'"
+        ]
+      },
+      "q15": {
+        "text": "What does 'work well done' mean to you?",
+        "options": [
+          "A reliable, scalable system",
+          "A conclusion backed by data",
+          "A solution that's a pleasure to use",
+          "Happy team and client"
+        ]
+      },
+      "q16": {
+        "text": "Where do you feel most comfortable?",
+        "options": [
+          "Alone with a hard problem and code",
+          "In spreadsheets, dashboards, and charts",
+          "In a graphic editor",
+          "In meetings and conversations with people"
+        ]
+      },
+      "q17": {
+        "text": "Which task would you take on more willingly?",
+        "options": [
+          "Fix a production bug",
+          "Find the cause of a metric drop",
+          "Redesign a checkout screen",
+          "Align requirements between departments"
+        ]
+      },
+      "q18": {
+        "text": "What interests you most in a product?",
+        "options": [
+          "How it's built internally",
+          "What numbers it shows",
+          "How it looks and feels",
+          "What value it delivers to the user"
+        ]
+      },
+      "q19": {
+        "text": "Which achievement would make you happiest?",
+        "options": [
+          "Made the system twice as fast",
+          "Found an insight that changed strategy",
+          "A redesign that lifted conversion",
+          "Launched a product together with the team"
+        ]
+      },
+      "q20": {
+        "text": "Which toolset would you most like to master?",
+        "options": [
+          "Docker, Git, CI/CD",
+          "SQL, Python, BI systems",
+          "Figma, prototyping tools",
+          "Jira, roadmap tools"
+        ]
+      },
+      "q21": {
+        "text": "What would you notice first in an app?",
+        "options": [
+          "Speed and stability",
+          "What data it collects",
+          "Design and animations",
+          "How well it solves my problem"
+        ]
+      },
+      "q22": {
+        "text": "What do you rely on when making a decision?",
+        "options": [
+          "Technical feasibility",
+          "Numbers and analytics",
+          "Feeling and aesthetics",
+          "People's and team's opinions"
+        ]
+      },
+      "q23": {
+        "text": "Which meeting doesn't feel like a burden?",
+        "options": [
+          "Technical design review",
+          "Metrics and dashboard review",
+          "Discussing mockups",
+          "One-on-one conversation with someone"
+        ]
+      },
+      "q24": {
+        "text": "What would you most want to automate first?",
+        "options": [
+          "Deploy and testing",
+          "Collecting and processing reports",
+          "Generating repetitive mockups",
+          "Coordinating team tasks"
+        ]
+      },
+      "q25": {
+        "text": "Which feedback is more valuable to you?",
+        "options": [
+          "'Technically flawless'",
+          "'Conclusions are accurate and well-reasoned'",
+          "'Looks and works superbly'",
+          "'You lead people excellently'"
+        ]
+      },
+      "q26": {
+        "text": "What fits you better in learning?",
+        "options": [
+          "Understanding how everything works under the hood",
+          "Testing a hypothesis with an experiment",
+          "Taking a great example and improving it",
+          "Discussing and applying with others in practice"
+        ]
+      },
+      "q27": {
+        "text": "Who would you like to be in 5 years?",
+        "options": [
+          "A strong engineer / architect",
+          "A lead analyst / data scientist",
+          "A lead designer",
+          "A product / team manager"
+        ]
+      },
+      "q28": {
+        "text": "What motivates you most in a task?",
+        "options": [
+          "Technical complexity",
+          "The chance to find the truth in data",
+          "Creative freedom",
+          "Impact on people and business"
+        ]
+      },
+      "q29": {
+        "text": "What blog or channel would you run?",
+        "options": [
+          "About code and architecture",
+          "About data and visualisation",
+          "About design and visual culture",
+          "About product and career"
+        ]
+      },
+      "q30": {
+        "text": "What matters most to you in the outcome?",
+        "options": [
+          "Clean, well-thought-out architecture",
+          "A measurable, proven result",
+          "A flawless user experience",
+          "Happy users and team"
+        ]
+      }
+    },
+    "categories": {
+      "tech": "Technology & Development",
+      "data": "Data & Analytics",
+      "design": "Design & Creativity",
+      "product": "Product & Management",
+      "people": "People & Communication"
+    },
+    "professionTitles": {
+      "frontend-developer": "Frontend Developer",
+      "data-analyst": "Data Analyst",
+      "ux-ui-designer": "UX/UI Designer",
+      "product-manager": "Product Manager",
+      "qa-engineer": "QA Engineer",
+      "hr-it-specialist": "IT Recruiter"
+    },
+    "rationale": {
+      "base": "Fit by areas: {cats}.",
+      "high": "Strong match ({match}%).",
+      "low": "Indicative recommendation ({match}%)."
+    },
+    "methodology": "Based on John Holland's RIASEC model of professional interests and the public O*NET Interest Profiler methodology (U.S. Department of Labor)."
+  },
+  "roadmap": {
+    "emptyTitle": "Development roadmap is empty",
+    "emptyText": "Choose a profession track — we'll automatically build a personal skills roadmap by grade.",
+    "chooseTrack": "Choose development track",
+    "skillsProgress": "{done} of {total} skills mastered",
+    "trackComplete": "Track completed!",
+    "refreshTitle": "Refresh courses (including soft skills) and stage descriptions from the catalog",
+    "refresh": "Refresh",
+    "constructor": "Builder",
+    "legendIntro": "Click the icon to the left of a skill to change its status:",
+    "statusNotStarted": "Not started",
+    "statusInProgress": "In progress",
+    "statusDone": "Mastered",
+    "statusStart": "Start",
+    "currentStatus": "Current status",
+    "targetStatus": "Target status",
+    "saveStatuses": "Save statuses",
+    "nextStep": "Next step",
+    "materialFallback": "Material",
+    "materialNotSet": "No material set · ~{hours} h to master",
+    "addViaConstructor": " — add a link via «Builder».",
+    "hoursEstimate": " · ~{hours} h",
+    "statusLabel": "Status: {label}",
+    "newStagePlaceholder": "New stage name",
+    "stage": "Stage",
+    "addSkillPlaceholder": "Add skill",
+    "skill": "Skill",
+    "deleteStage": "Delete stage",
+    "changeSkillStatus": "Change skill status {skillName}",
+    "moveUp": "Up",
+    "moveDown": "Down",
+    "deleteSkill": "Delete skill",
+    "stageNameLabel": "Stage name {name}",
+    "saveStageName": "Save name"
+  },
+  "tests": {
+    "title": "Assessment tests",
+    "subtitle": "Test your knowledge. Passing score is 70%. On failure, the test is frozen for 24 hours.",
+    "personalHint": "Personal tests are generated for your track; after a failed attempt difficulty is reduced (FT-7.7/7.8).",
+    "passed": "passed",
+    "frozen": "frozen",
+    "testMeta": "{profession} · {count} questions",
+    "retake": "Retake",
+    "start": "Start test",
+    "backToAll": "← All tests",
+    "generatePersonal": "Generate personal test",
+    "finish": "Finish test",
+    "answerAll": "Answer all questions to finish.",
+    "resultSummary": "{correct} of {total} correct · {status}",
+    "passedExclaim": "test passed!",
+    "needImprovement": "needs improvement",
+    "strongTopics": "Strong topics:",
+    "weakTopics": "Worth reviewing:",
+    "recommendations": "Recommended reading:",
+    "frozenUntil": "Test frozen until {date}",
+    "toTestsList": "Back to tests",
+    "toRoadmap": "Go to roadmap",
+    "frozenTitle": "Test frozen",
+    "frozenBody": "You didn't reach the passing score. Retake will be available {date}. Review weak topics or unfreeze the test.",
+    "buyAttempt": "Buy attempt (demo)",
+    "watchAd": "Watch ad",
+    "frozenDemoNote": "Demo mode: payment and ads are mocked — the attempt will be added immediately.",
+    "backToRoadmap": "Back to development roadmap"
+  },
+  "profile": {
+    "title": "Profile",
+    "currentTrack": "Current development track",
+    "notSelected": "Not selected",
+    "openRoadmap": "Open roadmap",
+    "chooseTrack": "Choose track",
+    "fullName": "Full name *",
+    "telegram": "Telegram (optional)",
+    "preparationLevel": "Preparation level *",
+    "currentPosition": "Current position",
+    "experienceMonths": "Experience (months)",
+    "education": "Education (university/college)",
+    "educationLevel": "Education level",
+    "currentSpecialty": "Current specialty",
+    "salaryExpectation": "Salary expectations (₽, optional)",
+    "age": "Age (optional)",
+    "resume": "Resume (demo upload, PDF/DOCX ≤10MB)",
+    "skills": "Skills (comma-separated tags)",
+    "about": "About me",
+    "telegramPlaceholder": "@username",
+    "educationPlaceholder": "HSE University",
+    "specialtyPlaceholder": "e.g. Developer",
+    "salaryPlaceholder": "150000",
+    "skillsPlaceholder": "JavaScript, SQL, OOP",
+    "chooseFile": "Choose file",
+    "deleteAccount": "Delete account and data",
+    "deleteConfirm": "Delete account and all personal data permanently?"
+  },
+  "goals": {
+    "title": "Career goals",
+    "generate": "Generate",
+    "selectTrackWarning": "Choose a development track to generate goals based on it.",
+    "empty": "No goals yet. Click «Generate» to get long-term goals based on your track and experience."
+  },
+  "salary": {
+    "allRussia": "All Russia",
+    "moscow": "Moscow",
+    "spb": "Saint Petersburg",
+    "title": "Salaries: median and percentiles",
+    "loading": "Loading data…",
+    "median": "median",
+    "p25": "25th percentile",
+    "p25hint": "lower — bottom quarter",
+    "p75": "75th percentile",
+    "p75hint": "upper — top quarter",
+    "p90": "90th percentile",
+    "p90hint": "top offers",
+    "source": "Source: {source}",
+    "sample": " · sample: {count} vacancies",
+    "noData": "No salary data yet.",
+    "thousands": "{value}k"
+  }
+}

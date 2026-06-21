@@ -1,12 +1,17 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { RoadmapView } from "@/components/RoadmapView";
 import { Map } from "lucide-react";
 
-export const metadata = { title: "Карта развития — Jobish" };
+export async function generateMetadata() {
+  const t = await getTranslations("metadata");
+  return { title: t("roadmap") };
+}
 
 export default async function RoadmapPage() {
+  const t = await getTranslations("roadmap");
   const user = (await getCurrentUser())!;
   const roadmap = await prisma.roadmap.findFirst({
     where: { userId: user.id },
@@ -26,13 +31,10 @@ export default async function RoadmapPage() {
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-600">
             <Map className="h-7 w-7" />
           </span>
-          <h1 className="mt-4 text-xl font-bold text-ink">Карта развития пуста</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Выберите профессию-трек — мы автоматически построим персональную
-            карту навыков по грейдам.
-          </p>
+          <h1 className="mt-4 text-xl font-bold text-ink">{t("emptyTitle")}</h1>
+          <p className="mt-2 text-sm text-slate-600">{t("emptyText")}</p>
           <Link href="/professions" className="btn-primary mt-6">
-            Выбрать трек развития
+            {t("chooseTrack")}
           </Link>
         </div>
       </div>

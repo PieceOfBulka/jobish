@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Logo } from "./Logo";
+import { LanguageToggle } from "./LanguageToggle";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -18,20 +20,22 @@ import {
   X,
 } from "lucide-react";
 
-const LINKS = [
-  { href: "/dashboard", label: "Дашборд", icon: LayoutDashboard },
-  { href: "/coach", label: "AI-коуч", icon: MessageSquareHeart },
-  { href: "/orientation", label: "Профориентация", icon: Compass },
-  { href: "/roadmap", label: "Карта развития", icon: Map },
-  { href: "/vacancies", label: "Вакансии", icon: Briefcase },
-  { href: "/tests", label: "Тесты", icon: ClipboardCheck },
-  { href: "/profile", label: "Профиль", icon: User },
-];
-
 export function AppSidebar({ name, plan }: { name: string; plan: string }) {
+  const t = useTranslations("nav");
+  const tPlans = useTranslations("plans");
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const LINKS = [
+    { href: "/dashboard", label: t("sidebarDashboard"), icon: LayoutDashboard },
+    { href: "/coach", label: t("sidebarCoach"), icon: MessageSquareHeart },
+    { href: "/orientation", label: t("sidebarOrientation"), icon: Compass },
+    { href: "/roadmap", label: t("sidebarRoadmap"), icon: Map },
+    { href: "/vacancies", label: t("sidebarVacancies"), icon: Briefcase },
+    { href: "/tests", label: t("sidebarTests"), icon: ClipboardCheck },
+    { href: "/profile", label: t("sidebarProfile"), icon: User },
+  ];
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -40,10 +44,10 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
   }
 
   const planLabel: Record<string, string> = {
-    free: "Базовый",
-    start: "Старт",
-    optimal: "Оптимальный",
-    pro: "Про",
+    free: tPlans("free.name"),
+    start: tPlans("start.name"),
+    optimal: tPlans("optimal.name"),
+    pro: tPlans("pro.name"),
   };
 
   return (
@@ -51,9 +55,12 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 lg:hidden">
         <Logo href="/dashboard" />
-        <button onClick={() => setOpen(true)} className="btn-ghost p-2" aria-label="Открыть меню">
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <LanguageToggle />
+          <button onClick={() => setOpen(true)} className="btn-ghost p-2" aria-label={t("openMenu")}>
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Overlay */}
@@ -69,7 +76,7 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
       >
         <div className="flex items-center justify-between px-5 py-4">
           <Logo href="/dashboard" />
-          <button onClick={() => setOpen(false)} className="btn-ghost p-1.5 lg:hidden" aria-label="Закрыть меню">
+          <button onClick={() => setOpen(false)} className="btn-ghost p-1.5 lg:hidden" aria-label={t("closeMenu")}>
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -97,13 +104,16 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
         </nav>
 
         <div className="border-t border-slate-100 p-3">
+          <div className="mb-2 hidden lg:block">
+            <LanguageToggle className="mb-2 px-3" />
+          </div>
           <div className="mb-2 rounded-xl bg-slate-50 px-3 py-2.5">
             <p className="truncate text-sm font-medium text-ink">{name}</p>
-            <p className="text-xs text-slate-500">Тариф: {planLabel[plan] ?? plan}</p>
+            <p className="text-xs text-slate-500">{t("planLabel", { plan: planLabel[plan] ?? plan })}</p>
           </div>
           <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600">
             <LogOut className="h-5 w-5" />
-            Выйти
+            {t("logout")}
           </button>
         </div>
       </aside>

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { formatRub } from "@/lib/utils";
@@ -19,6 +20,8 @@ export default async function ProfessionDetail({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const t = await getTranslations("professions");
+  const tCommon = await getTranslations("common");
   const { slug } = await params;
   const profession = await prisma.profession.findUnique({
     where: { slug },
@@ -57,10 +60,9 @@ export default async function ProfessionDetail({
   return (
     <div className="container-page py-12">
       <Link href="/professions" className="text-sm text-slate-500 hover:text-brand-600">
-        ← Все профессии
+        {t("backToAll")}
       </Link>
 
-      {/* Header */}
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
           <span className="badge bg-brand-50 text-brand-700">{profession.category}</span>
@@ -73,24 +75,23 @@ export default async function ProfessionDetail({
           <ChooseTrackButton slug={slug} isAuthed={Boolean(user)} isCurrent={isCurrent} />
           {profession.theoryTests[0] && (
             <Link href={user ? `/tests/${profession.theoryTests[0].id}` : "/register"} className="btn-outline">
-              <FileQuestion className="h-4 w-4" /> Пробный тест
+              <FileQuestion className="h-4 w-4" /> {t("trialTest")}
             </Link>
           )}
         </div>
       </div>
 
-      {/* Market analytics */}
       {profession.market && (
         <section className="mt-10">
-          <h2 className="text-xl font-bold text-ink">Аналитика рынка</h2>
+          <h2 className="text-xl font-bold text-ink">{t("marketAnalytics")}</h2>
           <p className="mt-1 text-sm text-slate-400">{profession.market.source}</p>
           <div className="mt-5 grid gap-5 lg:grid-cols-3">
             <div className="card p-5">
-              <p className="text-sm text-slate-500">Открытых вакансий</p>
+              <p className="text-sm text-slate-500">{t("openVacancies")}</p>
               <p className="mt-1 text-2xl font-bold text-ink">
                 {new Intl.NumberFormat("ru-RU").format(profession.market.openVacancies)}
               </p>
-              <p className="mt-3 text-sm text-slate-500">Спрос на рынке</p>
+              <p className="mt-3 text-sm text-slate-500">{t("marketDemand")}</p>
               <p className="mt-1 text-lg font-semibold capitalize text-brand-700">
                 {profession.market.demandLevel}
               </p>
@@ -109,12 +110,12 @@ export default async function ProfessionDetail({
                 </div>
               ))}
               <div className="col-span-3 mt-2">
-                <p className="mb-1 text-xs text-slate-500">Динамика зарплат (6 мес.)</p>
+                <p className="mb-1 text-xs text-slate-500">{t("salaryDynamics")}</p>
                 <SalaryChart data={trend} />
               </div>
             </div>
             <div className="card p-5">
-              <p className="mb-3 text-sm font-semibold text-ink">Топ-компании по найму</p>
+              <p className="mb-3 text-sm font-semibold text-ink">{t("topCompanies")}</p>
               <ul className="space-y-3">
                 {companies.map((c) => (
                   <li key={c.name} className="flex items-center justify-between text-sm">
@@ -123,26 +124,24 @@ export default async function ProfessionDetail({
                     </span>
                     <span className="text-right">
                       <span className="block font-semibold text-ink">{formatRub(c.salary)}</span>
-                      <span className="text-xs text-slate-400">найм {c.hiring}</span>
+                      <span className="text-xs text-slate-400">{tCommon("hiring", { level: c.hiring })}</span>
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-          {/* Зарплатная статистика: медиана/перцентили + город (ФТ-3.1) */}
           <div className="mt-5">
             <SalaryStats slug={slug} />
           </div>
         </section>
       )}
 
-      {/* Описание профессии (ФТ-3.1, раздел 1) */}
       {(responsibilities.length > 0 || profession.typicalDay) && (
         <section className="mt-10 grid gap-5 md:grid-cols-2">
           {responsibilities.length > 0 && (
             <div className="card p-6">
-              <h2 className="text-lg font-bold text-ink">Ключевые обязанности</h2>
+              <h2 className="text-lg font-bold text-ink">{t("keyDuties")}</h2>
               <ul className="mt-3 space-y-2 text-sm text-slate-600">
                 {responsibilities.map((r) => (
                   <li key={r} className="flex items-start gap-2">
@@ -154,14 +153,13 @@ export default async function ProfessionDetail({
           )}
           {profession.typicalDay && (
             <div className="card p-6">
-              <h2 className="text-lg font-bold text-ink">Типичный рабочий день</h2>
+              <h2 className="text-lg font-bold text-ink">{t("typicalDay")}</h2>
               <p className="mt-3 text-sm text-slate-600">{profession.typicalDay}</p>
             </div>
           )}
         </section>
       )}
 
-      {/* Сложность перехода (ФТ-3.1, раздел 3) */}
       {(profession.transitionMonths || profession.transitionNote) && (
         <section className="mt-6">
           <div className="card flex items-start gap-4 p-6">
@@ -169,10 +167,10 @@ export default async function ProfessionDetail({
               <Clock className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-lg font-bold text-ink">Сложность перехода</h2>
+              <h2 className="text-lg font-bold text-ink">{t("transitionDifficulty")}</h2>
               {profession.transitionMonths && (
                 <p className="mt-1 text-sm font-medium text-ink">
-                  Ожидаемое время освоения: ~{profession.transitionMonths} мес.
+                  {t("learningTime", { months: profession.transitionMonths })}
                 </p>
               )}
               {profession.transitionNote && (
@@ -183,20 +181,19 @@ export default async function ProfessionDetail({
         </section>
       )}
 
-      {/* Задачи и кейсы (ФТ-3.1, раздел 7) */}
       {(tasks.length > 0 || cases.length > 0) && (
         <section className="mt-6 grid gap-5 md:grid-cols-2">
           {tasks.length > 0 && (
             <div className="card p-6">
-              <h2 className="text-lg font-bold text-ink">Типичные задачи</h2>
+              <h2 className="text-lg font-bold text-ink">{t("typicalTasks")}</h2>
               <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                {tasks.map((t) => <li key={t}>• {t}</li>)}
+                {tasks.map((task) => <li key={task}>• {task}</li>)}
               </ul>
             </div>
           )}
           {cases.length > 0 && (
             <div className="card p-6">
-              <h2 className="text-lg font-bold text-ink">Кейсы для портфолио</h2>
+              <h2 className="text-lg font-bold text-ink">{t("portfolioCases")}</h2>
               <ul className="mt-3 space-y-2 text-sm">
                 {cases.map((c) => (
                   <li key={c.url}>
@@ -211,12 +208,11 @@ export default async function ProfessionDetail({
         </section>
       )}
 
-      {/* Skills by grade */}
       <section className="mt-12">
-        <h2 className="text-xl font-bold text-ink">Необходимые навыки</h2>
+        <h2 className="text-xl font-bold text-ink">{t("requiredSkills")}</h2>
         <div className="mt-5 grid gap-5 md:grid-cols-2">
           <div className="card p-6">
-            <h3 className="font-semibold text-ink">Hard skills по грейдам</h3>
+            <h3 className="font-semibold text-ink">{t("hardSkills")}</h3>
             <div className="mt-4 space-y-4">
               {GRADES.map((g) => {
                 const list = hard.filter((s) => s.grade === g.key);
@@ -235,13 +231,13 @@ export default async function ProfessionDetail({
             </div>
           </div>
           <div className="card p-6">
-            <h3 className="font-semibold text-ink">Soft skills</h3>
+            <h3 className="font-semibold text-ink">{t("softSkills")}</h3>
             <div className="mt-4 flex flex-wrap gap-2">
               {soft.map((s) => (
                 <span key={s.id} className="badge bg-accent-400/15 text-accent-600">{s.name}</span>
               ))}
             </div>
-            <h3 className="mt-6 font-semibold text-ink">Материалы для старта</h3>
+            <h3 className="mt-6 font-semibold text-ink">{t("starterMaterials")}</h3>
             <ul className="mt-3 space-y-2">
               {profession.materials.slice(0, 5).map((m) => (
                 <li key={m.id}>

@@ -1,16 +1,20 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Logo } from "./Logo";
+import { LanguageToggle } from "./LanguageToggle";
 import { getCurrentUser } from "@/lib/auth";
 import { LayoutDashboard } from "lucide-react";
 
-const NAV_LINKS = [
-  { href: "/#features", label: "Возможности" },
-  { href: "/professions", label: "Профессии" },
-  { href: "/pricing", label: "Тарифы" },
-];
-
 export async function Navbar() {
   const user = await getCurrentUser();
+  const t = await getTranslations("nav");
+
+  const NAV_LINKS = [
+    { href: "/#features", label: t("features") },
+    { href: "/professions", label: t("professions") },
+    { href: "/pricing", label: t("pricing") },
+  ];
+
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/80 backdrop-blur-lg">
       <nav className="container-page flex h-16 items-center justify-between">
@@ -29,18 +33,19 @@ export async function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <LanguageToggle className="mr-1" />
           {user ? (
             <Link href="/dashboard" className="btn-primary">
               <LayoutDashboard className="h-4 w-4" />
-              Кабинет
+              {t("dashboard")}
             </Link>
           ) : (
             <>
               <Link href="/login" className="btn-ghost hidden sm:inline-flex">
-                Войти
+                {t("login")}
               </Link>
               <Link href="/register" className="btn-primary">
-                Начать бесплатно
+                {t("register")}
               </Link>
             </>
           )}

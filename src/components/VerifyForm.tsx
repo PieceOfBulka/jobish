@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2, MailCheck } from "lucide-react";
 
 export function VerifyForm({ initialCode }: { initialCode?: string }) {
+  const t = useTranslations("verify");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [code, setCode] = useState(initialCode ?? "");
   const [loading, setLoading] = useState(false);
@@ -23,7 +26,7 @@ export function VerifyForm({ initialCode }: { initialCode?: string }) {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError(data.error ?? "Ошибка");
+      setError(data.error ?? tCommon("error"));
       return;
     }
     router.push("/dashboard");
@@ -43,13 +46,13 @@ export function VerifyForm({ initialCode }: { initialCode?: string }) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="label" htmlFor="code">Код подтверждения</label>
+        <label className="label" htmlFor="code">{t("codeLabel")}</label>
         <input
           id="code"
           name="code"
           inputMode="numeric"
           className="input tracking-widest"
-          placeholder="6-значный код"
+          placeholder={t("codePlaceholder")}
           value={code}
           onChange={(e) => setCode(e.target.value)}
           required
@@ -58,7 +61,7 @@ export function VerifyForm({ initialCode }: { initialCode?: string }) {
 
       {demoCode && (
         <p className="rounded-lg bg-brand-50 px-3 py-2 text-center text-sm text-brand-700">
-          Демо-режим: письмо не отправляется. Ваш код: <b>{demoCode}</b>
+          {t("demoCode", { code: demoCode })}
         </p>
       )}
       {error && (
@@ -67,10 +70,10 @@ export function VerifyForm({ initialCode }: { initialCode?: string }) {
 
       <button type="submit" className="btn-primary w-full" disabled={loading}>
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MailCheck className="h-4 w-4" />}
-        Подтвердить почту
+        {t("submit")}
       </button>
       <button type="button" onClick={resend} className="btn-ghost w-full">
-        Отправить код повторно
+        {t("resend")}
       </button>
     </form>
   );

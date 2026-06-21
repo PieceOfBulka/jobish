@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canRetake } from "@/lib/theory";
@@ -11,6 +12,7 @@ export default async function TakeTestPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations("tests");
   const { id } = await params;
   const user = (await getCurrentUser())!;
 
@@ -33,7 +35,7 @@ export default async function TakeTestPage({
   return (
     <div className="container-page max-w-3xl py-8">
       <Link href="/tests" className="text-sm text-slate-500 hover:text-brand-600">
-        ← Все тесты
+        {t("backToAll")}
       </Link>
       <div className="mt-4">
         {frozen && last?.frozenUntil ? (

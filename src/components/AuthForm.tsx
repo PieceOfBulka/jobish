@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
+  const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,14 +27,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Что-то пошло не так");
+        setError(data.error ?? tCommon("somethingWrong"));
         setLoading(false);
         return;
       }
       router.push(data.needsVerification ? "/verify" : "/dashboard");
       router.refresh();
     } catch {
-      setError("Ошибка сети. Попробуйте ещё раз.");
+      setError(tCommon("networkError"));
       setLoading(false);
     }
   }
@@ -40,26 +43,24 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {mode === "register" && (
         <div>
-          <label className="label" htmlFor="name">Имя</label>
-          <input id="name" name="name" className="input" placeholder="Как к вам обращаться" autoComplete="name" required />
+          <label className="label" htmlFor="name">{t("name")}</label>
+          <input id="name" name="name" className="input" placeholder={t("namePlaceholder")} autoComplete="name" required />
         </div>
       )}
       <div>
-        <label className="label" htmlFor="email">Email</label>
+        <label className="label" htmlFor="email">{t("email")}</label>
         <input id="email" name="email" type="email" className="input" placeholder="you@example.com" autoComplete="email" required />
       </div>
       <div>
-        <label className="label" htmlFor="password">Пароль</label>
+        <label className="label" htmlFor="password">{t("password")}</label>
         <input id="password" name="password" type="password" className="input" placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} required />
         {mode === "register" && (
-          <p className="mt-1 text-xs text-slate-400">
-            Более 8 символов, буквы, цифры и спецсимвол.
-          </p>
+          <p className="mt-1 text-xs text-slate-400">{t("passwordHint")}</p>
         )}
       </div>
       {mode === "register" && (
         <div>
-          <label className="label" htmlFor="passwordConfirm">Повторите пароль</label>
+          <label className="label" htmlFor="passwordConfirm">{t("passwordConfirm")}</label>
           <input id="passwordConfirm" name="passwordConfirm" type="password" className="input" placeholder="••••••••" autoComplete="new-password" required />
         </div>
       )}
@@ -72,14 +73,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
       <button type="submit" className="btn-primary w-full" disabled={loading}>
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {mode === "login" ? "Войти" : "Создать аккаунт"}
+        {mode === "login" ? t("login") : t("createAccount")}
       </button>
 
       <p className="text-center text-sm text-slate-500">
         {mode === "login" ? (
-          <>Нет аккаунта?{" "}<Link href="/register" className="font-medium text-brand-600 hover:underline">Зарегистрироваться</Link></>
+          <>{t("noAccount")}{" "}<Link href="/register" className="font-medium text-brand-600 hover:underline">{t("registerLink")}</Link></>
         ) : (
-          <>Уже есть аккаунт?{" "}<Link href="/login" className="font-medium text-brand-600 hover:underline">Войти</Link></>
+          <>{t("hasAccount")}{" "}<Link href="/login" className="font-medium text-brand-600 hover:underline">{t("login")}</Link></>
         )}
       </p>
     </form>

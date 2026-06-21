@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Loader2, CheckCircle2, XCircle, Lock, Clock } from "lucide-react";
 
@@ -33,6 +34,9 @@ export function TheoryQuiz({
   title: string;
   questions: Question[];
 }) {
+  const t = useTranslations("tests");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
@@ -41,6 +45,7 @@ export function TheoryQuiz({
 
   const answeredCount = Object.keys(answers).length;
   const allAnswered = answeredCount === questions.length;
+  const dateLocale = locale === "en" ? "en-US" : "ru-RU";
 
   async function submit() {
     setLoading(true);
@@ -53,7 +58,7 @@ export function TheoryQuiz({
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError(data.error ?? "Ошибка");
+      setError(data.error ?? tCommon("error"));
       return;
     }
     setResult(data);
@@ -62,6 +67,7 @@ export function TheoryQuiz({
 
   if (result) {
     const frozenUntil = result.frozenUntil ? new Date(result.frozenUntil) : null;
+    const statusText = result.passed ? t("passedExclaim") : t("needImprovement");
     return (
       <div className="card p-8 text-center" style={{ animation: "var(--animate-fade-up)" }}>
         <span className={`mx-auto grid h-16 w-16 place-items-center rounded-2xl ${result.passed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
@@ -69,26 +75,29 @@ export function TheoryQuiz({
         </span>
         <h2 className="mt-4 text-2xl font-bold text-ink">{result.score}%</h2>
         <p className="text-slate-600">
-          {result.correctCount} из {result.total} правильных ·{" "}
-          {result.passed ? "тест сдан!" : "нужно подтянуть темы"}
+          {t("resultSummary", {
+            correct: result.correctCount,
+            total: result.total,
+            status: statusText,
+          })}
         </p>
 
         {result.strongTopics.length > 0 && (
           <div className="mt-5 text-left">
-            <p className="text-sm font-medium text-emerald-700">Сильные темы:</p>
+            <p className="text-sm font-medium text-emerald-700">{t("strongTopics")}</p>
             <div className="mt-1.5 flex flex-wrap gap-2">
-              {result.strongTopics.map((t) => (
-                <span key={t} className="badge bg-emerald-50 text-emerald-700">{t}</span>
+              {result.strongTopics.map((topic) => (
+                <span key={topic} className="badge bg-emerald-50 text-emerald-700">{topic}</span>
               ))}
             </div>
           </div>
         )}
         {result.weakTopics.length > 0 && (
           <div className="mt-4 text-left">
-            <p className="text-sm font-medium text-amber-700">Стоит повторить:</p>
+            <p className="text-sm font-medium text-amber-700">{t("weakTopics")}</p>
             <div className="mt-1.5 flex flex-wrap gap-2">
-              {result.weakTopics.map((t) => (
-                <span key={t} className="badge bg-amber-50 text-amber-700">{t}</span>
+              {result.weakTopics.map((topic) => (
+                <span key={topic} className="badge bg-amber-50 text-amber-700">{topic}</span>
               ))}
             </div>
           </div>
@@ -100,7 +109,7 @@ export function TheoryQuiz({
 
         {result.recommendations.length > 0 && (
           <div className="mt-4 text-left">
-            <p className="text-sm font-medium text-ink">Рекомендуем изучить:</p>
+            <p className="text-sm font-medium text-ink">{t("recommendations")}</p>
             <ul className="mt-2 space-y-1.5">
               {result.recommendations.map((r) => (
                 <li key={r.url}>
@@ -116,13 +125,20 @@ export function TheoryQuiz({
         {!result.passed && frozenUntil && (
           <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
             <Lock className="h-4 w-4" />
-            Тест заморожен до {frozenUntil.toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
+            {t("frozenUntil", {
+              date: frozenUntil.toLocaleString(dateLocale, {
+                day: "numeric",
+                month: "long",
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            })}
           </div>
         )}
 
         <div className="mt-6 flex justify-center gap-3">
-          <Link href="/tests" className="btn-outline">К списку тестов</Link>
-          <Link href="/roadmap" className="btn-primary">К карте развития</Link>
+          <Link href="/tests" className="btn-outline">{t("toTestsList")}</Link>
+          <Link href="/roadmap" className="btn-primary">{t("toRoadmap")}</Link>
         </div>
       </div>
     );
@@ -172,10 +188,10 @@ export function TheoryQuiz({
 
       <button onClick={submit} disabled={!allAnswered || loading} className="btn-primary mt-6 w-full sm:w-auto">
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        Завершить тест
+        {t("finish")}
       </button>
       {!allAnswered && (
-        <p className="mt-2 text-sm text-slate-400">Ответьте на все вопросы, чтобы завершить.</p>
+        <p className="mt-2 text-sm text-slate-400">{t("answerAll")}</p>
       )}
     </div>
   );
