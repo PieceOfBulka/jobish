@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
         ? (PROFESSION_TITLES[profile.targetProfession] ?? profile.targetProfession)
         : undefined,
       experienceMonths: profile?.experienceMonths,
+      resumeText: profile?.resumeText ?? undefined,
     },
   );
 

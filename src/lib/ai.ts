@@ -12,6 +12,7 @@ export interface CoachContext {
   userName?: string;
   targetProfession?: string;
   experienceMonths?: number;
+  resumeText?: string;
 }
 
 export function isLlmEnabled(): boolean {
@@ -30,6 +31,9 @@ function systemPrompt(ctx: CoachContext): string {
     parts.push(`Целевая профессия пользователя: ${ctx.targetProfession}.`);
   if (typeof ctx.experienceMonths === "number")
     parts.push(`Опыт работы: ${ctx.experienceMonths} мес.`);
+  if (ctx.resumeText) {
+    parts.push(`\n\nРезюме пользователя (извлечённый текст, используй для персонализации советов):\n---\n${ctx.resumeText}\n---`);
+  }
   return parts.join(" ");
 }
 

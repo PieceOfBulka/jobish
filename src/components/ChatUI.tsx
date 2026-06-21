@@ -10,7 +10,7 @@ interface Msg {
   content: string;
 }
 
-export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: boolean }) {
+export function ChatUI({ initial, llmEnabled, hasResume }: { initial: Msg[]; llmEnabled: boolean; hasResume?: boolean }) {
   const t = useTranslations("coach");
   const tCommon = useTranslations("common");
   const [messages, setMessages] = useState<Msg[]>(initial);
@@ -119,9 +119,16 @@ export function ChatUI({ initial, llmEnabled }: { initial: Msg[]; llmEnabled: bo
           <Send className="h-4 w-4" />
         </button>
       </form>
-      {!llmEnabled && (
-        <p className="mt-2 text-center text-xs text-slate-400">{t("demoNote")}</p>
-      )}
+      <div className="mt-2 flex items-center justify-center gap-3">
+        {hasResume && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-500">
+            📄 Резюме загружено
+          </span>
+        )}
+        {!llmEnabled && (
+          <p className="text-center text-xs text-slate-400">{t("demoNote")}</p>
+        )}
+      </div>
     </div>
   );
 }

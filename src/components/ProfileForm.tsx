@@ -31,10 +31,42 @@ export function ProfileForm({ initial }: { initial: ProfileData }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [resumeStatus, setResumeStatus] = useState<{ type: "ok" | "warn" | "error"; message: string } | null>(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
 
   function set<K extends keyof ProfileData>(key: K, value: ProfileData[K]) {
     setForm((f) => ({ ...f, [key]: value }));
     setSaved(false);
+  }
+
+  async function uploadResume(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingResume(true);
+    setResumeStatus(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch("/api/resume", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setResumeStatus({ type: "error", message: data.error ?? "Ошибка загрузки" });
+      } else {
+        set("resumeFileName", data.fileName);
+        if (data.warning) {
+          setResumeStatus({ type: "warn", message: data.warning });
+        } else if (data.resumeText === "extracted") {
+          setResumeStatus({ type: "ok", message: "Резюме загружено и прочитано — коуч учтёт его при ответах." });
+        } else {
+          setResumeStatus({ type: "ok", message: "Файл сохранён." });
+        }
+      }
+    } catch {
+      setResumeStatus({ type: "error", message: "Не удалось загрузить файл." });
+    } finally {
+      setUploadingResume(false);
+      e.target.value = "";
+    }
   }
 
   async function save(e: React.FormEvent) {
@@ -141,11 +173,15 @@ export function ProfileForm({ initial }: { initial: ProfileData }) {
         <div>
           <label className="label">{t("resume")}</label>
           <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2.5 text-sm text-slate-500 hover:border-brand-400">
-            <Upload className="h-4 w-4" />
+            {uploadingResume ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
             {form.resumeFileName || t("chooseFile")}
-            <input type="file" accept=".pdf,.doc,.docx" className="hidden"
-              onChange={(e) => set("resumeFileName", e.target.files?.[0]?.name ?? null)} />
+            <input type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={uploadResume} disabled={uploadingResume} />
           </label>
+          {resumeStatus && (
+            <p className={`mt-1 text-xs ${resumeStatus.type === "error" ? "text-red-600" : resumeStatus.type === "warn" ? "text-amber-600" : "text-emerald-600"}`}>
+              {resumeStatus.message}
+            </p>
+          )}
         </div>
       </div>
 

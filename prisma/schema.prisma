@@ -56,6 +56,7 @@ model Profile {
   bio               String?
   targetProfession  String? // slug выбранной целевой профессии
   resumeFileName    String? // имя файла резюме (ФТ-1.4, мок хранилища)
+  resumeText        String? // извлечённый текст резюме (PDF/DOCX/TXT, макс. 8000 символов)
   careerPortrait    String? // карьерный портрет (ФТ-7.4)
   lowerDifficulty   Boolean @default(false) // снижение сложности тестов (ФТ-7.8)
 

@@ -11,6 +11,7 @@ export async function generateMetadata() {
 export default async function CoachPage() {
   const t = await getTranslations("coach");
   const user = (await getCurrentUser())!;
+  const profile = await prisma.profile.findUnique({ where: { userId: user.id }, select: { resumeText: true } });
   let session = await prisma.chatSession.findFirst({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
@@ -34,6 +35,7 @@ export default async function CoachPage() {
           content: m.content,
         }))}
         llmEnabled={Boolean(process.env.OPENROUTER_API_KEY)}
+        hasResume={Boolean(profile?.resumeText)}
       />
     </div>
   );
