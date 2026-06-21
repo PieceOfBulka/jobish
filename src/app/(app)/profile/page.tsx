@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { PROFESSION_TITLES } from "@/lib/orientation";
 import { ProfileForm } from "@/components/ProfileForm";
 import { GoalsSection } from "@/components/GoalsSection";
-import { Route } from "lucide-react";
+import { Route, ClipboardList } from "lucide-react";
+import type { AttemptPayload } from "@/app/api/tests/submit/route";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -15,11 +16,16 @@ export async function generateMetadata() {
 export default async function ProfilePage() {
   const t = await getTranslations("profile");
   const user = (await getCurrentUser())!;
-  const [profile, goals] = await Promise.all([
+  const [profile, goals, testHistory] = await Promise.all([
     prisma.profile.findUnique({ where: { userId: user.id } }),
     prisma.careerGoal.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "asc" },
+    }),
+    prisma.testAttempt.findMany({
+      where: { userId: user.id },
+      orderBy: { completedAt: "desc" },
+      include: { test: { select: { id: true, title: true } } },
     }),
   ]);
 
@@ -75,6 +81,56 @@ export default async function ProfilePage() {
           }))}
           hasTrack={Boolean(profile?.targetProfession)}
         />
+      </div>
+
+      <div className="mt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <ClipboardList className="h-5 w-5 text-brand-600" />
+          <h2 className="text-lg font-semibold text-ink">История тестов</h2>
+        </div>
+        {testHistory.length === 0 ? (
+          <p className="text-sm text-slate-500">Вы ещё не проходили тесты</p>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-slate-600">Тест</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-600">Результат</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-600">Дата</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {testHistory.map((attempt) => {
+                  const payload = JSON.parse(attempt.resultPayload) as AttemptPayload;
+                  const dateStr = new Date(attempt.completedAt).toLocaleDateString("ru-RU", {
+                    day: "2-digit", month: "2-digit", year: "numeric",
+                  });
+                  return (
+                    <tr key={attempt.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-medium text-ink">{attempt.test.title}</td>
+                      <td className="px-4 py-3">
+                        <span className={`badge ${payload.passed ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                          {payload.score}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">{dateStr}</td>
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          href={`/tests/${attempt.test.id}?attemptId=${attempt.id}`}
+                          className="text-brand-600 hover:underline"
+                        >
+                          Посмотреть результат
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

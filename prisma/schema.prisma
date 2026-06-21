@@ -26,13 +26,14 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  profile      Profile?
-  orientation  OrientationResult?
-  careerGoals  CareerGoal[]
-  roadmaps     Roadmap[]
-  attempts     TheoryAttempt[]
-  chatSessions ChatSession[]
-  subscription Subscription?
+  profile        Profile?
+  orientation    OrientationResult?
+  careerGoals    CareerGoal[]
+  roadmaps       Roadmap[]
+  attempts       TheoryAttempt[]
+  testAttempts   TestAttempt[]
+  chatSessions   ChatSession[]
+  subscription   Subscription?
 }
 
 model Profile {
@@ -231,6 +232,7 @@ model TheoryTest {
   isPersonal   Boolean          @default(false)
   questions    TheoryQuestion[]
   attempts     TheoryAttempt[]
+  testAttempts TestAttempt[]
 }
 
 model TheoryQuestion {
@@ -280,6 +282,18 @@ model ChatMessage {
   role      String      // user | assistant
   content   String
   createdAt DateTime    @default(now())
+}
+
+// ─────────────── История попыток тестов (ФТ-4, US7) ───────────────
+
+model TestAttempt {
+  id            Int        @id @default(autoincrement())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId        String
+  test          TheoryTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  completedAt   DateTime   @default(now())
+  resultPayload String     // JSON: { score, passed, weakTopics, strongTopics, total, correctCount, conclusion, recommendations, testTitle }
 }
 
 // ─────────────── Подписка (мок монетизации) ───────────────

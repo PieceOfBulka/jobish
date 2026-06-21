@@ -11,6 +11,19 @@ import {
   type GradedAnswer,
 } from "@/lib/theory";
 
+export interface AttemptPayload {
+  score: number;
+  passed: boolean;
+  weakTopics: string[];
+  strongTopics: string[];
+  total: number;
+  correctCount: number;
+  conclusion: string;
+  recommendations: { title: string; url: string; provider: string }[];
+  testTitle: string;
+  completedAt: string;
+}
+
 const answerValue = z.union([
   z.number().int().min(0),          // single (option index) or scale (1-10)
   z.array(z.number().int().min(0)), // multiple (option indices)
@@ -125,9 +138,42 @@ export async function POST(req: NextRequest) {
   // correctCount — только для scoreable single/multiple (exact match = full weight earned)
   const scoreableGraded = graded.filter((g) => g.scoreable);
   const correctCount = scoreableGraded.filter((g) => g.points >= g.weight).length;
+  const conclusion = buildConclusion(result.score, result.passed, result.weakTopics);
+
+  // Сохраняем предыдущую попытку до создания новой (для сравнения)
+  const prevAttempt = await prisma.testAttempt.findFirst({
+    where: { userId, testId },
+    orderBy: { completedAt: "desc" },
+  });
+  const previousResult = prevAttempt
+    ? (JSON.parse(prevAttempt.resultPayload) as AttemptPayload)
+    : null;
+
+  // Создаём запись истории (append-only, никогда не перезаписываем)
+  const payload: AttemptPayload = {
+    score: result.score,
+    passed: result.passed,
+    weakTopics: result.weakTopics,
+    strongTopics: result.strongTopics,
+    total: scoreableGraded.length,
+    correctCount,
+    conclusion,
+    recommendations,
+    testTitle: test.title,
+    completedAt: new Date().toISOString(),
+  };
+  const newAttemptRecord = await prisma.testAttempt.create({
+    data: {
+      userId,
+      testId,
+      resultPayload: JSON.stringify(payload),
+    },
+  });
 
   return NextResponse.json({
     ok: true,
+    attemptId: newAttemptRecord.id,
+    previousResult,
     score: result.score,
     passed: result.passed,
     weakTopics: result.weakTopics,
@@ -135,7 +181,7 @@ export async function POST(req: NextRequest) {
     frozenUntil: result.frozenUntil,
     total: scoreableGraded.length,
     correctCount,
-    conclusion: buildConclusion(result.score, result.passed, result.weakTopics),
+    conclusion,
     recommendations,
   });
 }
