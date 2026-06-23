@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   ORIENTATION_QUESTIONS,
@@ -9,16 +10,19 @@ import {
   randomAnswers,
   type ProfessionMatch,
 } from "@/lib/orientation";
-import { ArrowRight, ArrowLeft, RotateCcw, Trophy, Loader2, Dice5 } from "lucide-react";
+import { ArrowRight, ArrowLeft, RotateCcw, Trophy, Loader2, Dice5, Route, Check } from "lucide-react";
 
 export function OrientationQuiz({ done }: { done: boolean }) {
   const t = useTranslations("orientationPage");
   const tCommon = useTranslations("common");
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [matches, setMatches] = useState<ProfessionMatch[] | null>(null);
   const [hasStrong, setHasStrong] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [trackLoading, setTrackLoading] = useState<string | null>(null);
+  const [trackChosen, setTrackChosen] = useState<string | null>(null);
 
   const q = ORIENTATION_QUESTIONS[step];
   const total = ORIENTATION_QUESTIONS.length;
@@ -54,6 +58,24 @@ export function OrientationQuiz({ done }: { done: boolean }) {
     setStep(0);
     setAnswers({});
     setMatches(null);
+    setTrackChosen(null);
+  }
+
+  async function chooseTrack(slug: string) {
+    setTrackLoading(slug);
+    try {
+      const res = await fetch("/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      if (res.ok) {
+        setTrackChosen(slug);
+        router.refresh();
+      }
+    } finally {
+      setTrackLoading(null);
+    }
   }
 
   // Build a localised rationale from the match score and slug.
@@ -90,34 +112,52 @@ export function OrientationQuiz({ done }: { done: boolean }) {
           </p>
         )}
         <div className="mt-6 grid gap-4">
-          {matches.map((m, i) => (
-            <Link
-              key={m.slug}
-              href={`/professions/${m.slug}`}
-              className="card card-hover flex items-start justify-between gap-4 p-5"
-            >
-              <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm font-bold text-slate-500">
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="font-semibold text-ink">
-                    {t(`professionTitles.${m.slug}` as Parameters<typeof t>[0])}
-                    <span className={`ml-2 text-xs font-medium ${m.match >= MATCH_THRESHOLD ? "text-emerald-600" : "text-amber-600"}`}>
-                      {m.match}%
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-500">{buildRationale(m)}</p>
+          {matches.map((m, i) => {
+            const isChosen = trackChosen === m.slug;
+            const isLoadingThis = trackLoading === m.slug;
+            return (
+              <div key={m.slug} className="card p-5">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm font-bold text-slate-500">
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-ink">
+                        {t(`professionTitles.${m.slug}` as Parameters<typeof t>[0])}
+                      </p>
+                      <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${m.match >= MATCH_THRESHOLD ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                        {m.match}%
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                      <div className={`h-full rounded-full transition-all ${m.match >= MATCH_THRESHOLD ? "bg-emerald-500" : "bg-brand-500"}`} style={{ width: `${m.match}%` }} />
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-500">{buildRationale(m)}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <button
+                    onClick={() => chooseTrack(m.slug)}
+                    disabled={isLoadingThis || !!trackChosen}
+                    className={`btn-primary flex-1 sm:flex-none ${isChosen ? "bg-emerald-600 border-emerald-600" : ""}`}
+                  >
+                    {isLoadingThis ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isChosen ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Route className="h-4 w-4" />
+                    )}
+                    {isChosen ? t("trackChosen") : t("chooseTrack")}
+                  </button>
+                  <Link href={`/professions/${m.slug}`} className="btn-ghost">
+                    {t("viewAnalytics")} <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="hidden h-2 w-20 overflow-hidden rounded-full bg-slate-100 sm:block">
-                  <div className="h-full rounded-full bg-brand-500" style={{ width: `${m.match}%` }} />
-                </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-brand-600" />
-              </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
         <button onClick={restart} className="btn-ghost mt-6">
           <RotateCcw className="h-4 w-4" /> {t("retake")}
