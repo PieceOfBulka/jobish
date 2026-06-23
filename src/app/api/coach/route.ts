@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
 
   // ФТ-7.1–7.4 — передача прогресса через чат: отмечаем навыки и обновляем roadmap
   let progressNote = "";
+  let updatedSkillNames: string[] = [];
   const roadmap = await prisma.roadmap.findFirst({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
         (s) => s.status === "not_started" && !matched.includes(s.skillName),
       );
       progressNote = motivationalBlock(done, steps.length, next?.skillName);
+      updatedSkillNames = toMark.map((s) => s.skillName);
 
       // ФТ-7.4 — обновляем карьерный портрет
       const portrait = buildCareerPortrait({
@@ -122,5 +124,6 @@ export async function POST(req: NextRequest) {
     ok: true,
     reply: { id: saved.id, content: finalContent, createdAt: saved.createdAt },
     source,
+    updatedSteps: updatedSkillNames,
   });
 }

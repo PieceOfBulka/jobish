@@ -311,6 +311,7 @@
     "typing": "Coach is typing…",
     "placeholder": "Write a message…",
     "demoNote": "Demo coach engine. Connect OPENROUTER_API_KEY for real model responses.",
+    "roadmapUpdated": "Roadmap updated: {count} skill(s) marked as done → open roadmap",
     "suggestions": {
       "0": "Help me choose an IT direction",
       "1": "What skills do I need for my track?",

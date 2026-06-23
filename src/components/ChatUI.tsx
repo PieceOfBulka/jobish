@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useId } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Send, Loader2, Sparkles } from "lucide-react";
+import { Send, Loader2, Sparkles, MapPin } from "lucide-react";
 
 interface Msg {
   id: string;
   role: "user" | "assistant";
   content: string;
+  updatedSteps?: string[];
 }
 
 export function ChatUI({ initial, llmEnabled, hasResume }: { initial: Msg[]; llmEnabled: boolean; hasResume?: boolean }) {
@@ -49,7 +51,12 @@ export function ChatUI({ initial, llmEnabled, hasResume }: { initial: Msg[]; llm
     }
     setMessages((m) => [
       ...m,
-      { id: data.reply.id, role: "assistant", content: data.reply.content },
+      {
+        id: data.reply.id,
+        role: "assistant",
+        content: data.reply.content,
+        updatedSteps: data.updatedSteps ?? [],
+      },
     ]);
   }
 
@@ -74,7 +81,7 @@ export function ChatUI({ initial, llmEnabled, hasResume }: { initial: Msg[]; llm
         )}
 
         {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div key={m.id} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
             <div
               className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm sm:max-w-[75%] ${
                 m.role === "user"
@@ -84,6 +91,16 @@ export function ChatUI({ initial, llmEnabled, hasResume }: { initial: Msg[]; llm
             >
               {m.content}
             </div>
+            {m.role === "assistant" && m.updatedSteps && m.updatedSteps.length > 0 && (
+              <Link
+                href="/roadmap"
+                data-testid="roadmap-update-badge"
+                className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-100 transition-colors"
+              >
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                {t("roadmapUpdated", { count: m.updatedSteps.length })}
+              </Link>
+            )}
           </div>
         ))}
 

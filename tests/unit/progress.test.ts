@@ -52,6 +52,39 @@ describe("buildCareerPortrait", () => {
   });
 });
 
+// US8: сценарии передачи прогресса через чат
+describe("US8: progress sharing via chat", () => {
+  it("detects multiple skills in one message", () => {
+    const res = detectCompletedSkills(
+      "Я прошёл React, TypeScript и JavaScript сегодня",
+      skills,
+    );
+    expect(res).toContain("React");
+    expect(res).toContain("TypeScript");
+    expect(res).toContain("JavaScript (ES6+)");
+  });
+
+  it("does not trigger on casual mention without progress verb", () => {
+    expect(detectCompletedSkills("Хочу изучить React и TypeScript", skills)).toEqual([]);
+  });
+
+  it("motivational block shows 50%+ message at halfway", () => {
+    const b = motivationalBlock(3, 4, "TypeScript");
+    expect(b).toMatch(/больше половины/i);
+    expect(b).toMatch(/75%/);
+  });
+
+  it("motivational block omits next skill when track is complete", () => {
+    const b = motivationalBlock(4, 4);
+    expect(b).not.toMatch(/Следующий шаг/i);
+  });
+
+  it("updatedSteps from API is empty when no progress verb", () => {
+    const matched = detectCompletedSkills("Расскажи мне про HTML", skills);
+    expect(matched).toHaveLength(0);
+  });
+});
+
 describe("difficulty (ФТ-7.8)", () => {
   it("lowers difficulty below 50%", () => {
     expect(shouldLowerDifficulty(40)).toBe(true);

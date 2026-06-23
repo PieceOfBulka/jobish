@@ -107,6 +107,20 @@ test("прогресс через чат обновляет карту (моти
   await expect(page.getByText(/Прогресс по карте/i)).toBeVisible();
 });
 
+// US8: бейдж со ссылкой на roadmap появляется при обновлении шагов
+// Тест предполагает, что у пользователя уже есть roadmap (frontend-developer из предыдущих тестов)
+test("US8: чат показывает бейдж обновления roadmap при прогрессе", async ({ page }) => {
+  await login(page);
+  await page.goto("/coach");
+  const box = page.getByPlaceholder(/Напишите сообщение/i);
+  await box.fill("Я прошёл HTML и выучил React");
+  await box.press("Enter");
+  // Мотивационный блок виден в тексте ответа
+  await expect(page.getByText(/Прогресс по карте/i)).toBeVisible();
+  // Бейдж-ссылка на roadmap появилась под сообщением ассистента
+  await expect(page.getByTestId("roadmap-update-badge")).toBeVisible();
+});
+
 test("генерация персонального теста", async ({ page }) => {
   await login(page);
   await page.goto("/tests");
