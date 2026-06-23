@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, createSession } from "@/lib/auth";
+import { hashPassword, createSessionResponse } from "@/lib/auth";
 import {
   isValidEmail,
   validatePassword,
@@ -56,8 +56,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await createSession(user.id);
-
   // Мок доставки письма (ФТ-1.6): код возвращаем для демо-подтверждения.
-  return NextResponse.json({ ok: true, needsVerification: true, demoCode: code });
+  return createSessionResponse(user.id, {
+    ok: true,
+    needsVerification: true,
+    demoCode: code,
+  });
 }

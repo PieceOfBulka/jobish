@@ -1,25 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { SsoButtons } from "@/components/SsoButtons";
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
-  const router = useRouter();
+export function AuthForm({
+  mode,
+  demoCredentials,
+  ssoError,
+}: {
+  mode: "login" | "register";
+  demoCredentials?: { email: string; password: string };
+  ssoError?: string | null;
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function loginWith(payload: Record<string, FormDataEntryValue>) {
     setError(null);
     setLoading(true);
-    const form = new FormData(e.currentTarget);
-    const payload = Object.fromEntries(form.entries());
     try {
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -28,16 +33,30 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         setLoading(false);
         return;
       }
-      router.push(data.needsVerification ? "/verify" : "/dashboard");
-      router.refresh();
+      window.location.assign(data.needsVerification ? "/verify" : "/dashboard");
     } catch {
       setError("Ошибка сети. Попробуйте ещё раз.");
       setLoading(false);
     }
   }
 
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    await loginWith(Object.fromEntries(form.entries()));
+  }
+
+  async function onDemoLogin() {
+    if (!demoCredentials) return;
+    await loginWith({
+      email: demoCredentials.email,
+      password: demoCredentials.password,
+    });
+  }
+
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <SsoButtons ssoError={ssoError} />
       {mode === "register" && (
         <div>
           <label className="label" htmlFor="name">Имя</label>
@@ -74,6 +93,17 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         {mode === "login" ? "Войти" : "Создать аккаунт"}
       </button>
+
+      {mode === "login" && demoCredentials && (
+        <button
+          type="button"
+          onClick={onDemoLogin}
+          className="btn-ghost w-full border border-brand-100 text-brand-700"
+          disabled={loading}
+        >
+          Войти в демо-аккаунт
+        </button>
+      )}
 
       <p className="text-center text-sm text-slate-500">
         {mode === "login" ? (

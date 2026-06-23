@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword, createSession } from "@/lib/auth";
+import { verifyPassword, createSessionResponse } from "@/lib/auth";
 
 const schema = z.object({
   email: z.string().trim().email("Некорректный email"),
@@ -21,7 +21,19 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase() },
   });
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+  if (!user) {
+    return NextResponse.json(
+      { error: "Неверный email или пароль" },
+      { status: 401 },
+    );
+  }
+  if (!user.passwordHash) {
+    return NextResponse.json(
+      { error: "Для этого аккаунта доступен только вход через Google, ВКонтакте или Яндекс" },
+      { status: 401 },
+    );
+  }
+  if (!(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json(
       { error: "Неверный email или пароль" },
       { status: 401 },
@@ -33,6 +45,8 @@ export async function POST(req: NextRequest) {
       { status: 403 },
     );
   }
-  await createSession(user.id);
-  return NextResponse.json({ ok: true, needsVerification: !user.isVerified });
+  return createSessionResponse(user.id, {
+    ok: true,
+    needsVerification: !user.isVerified,
+  });
 }
