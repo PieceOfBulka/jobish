@@ -393,8 +393,8 @@ export interface ProfessionMatch {
 
 // Порог соответствия (ФТ-2.2): профессии выше него считаются «явным совпадением»
 export const MATCH_THRESHOLD = 70;
-// Максимум профессий в отчёте (ФТ-2.2: «не более пяти»)
-export const MAX_MATCHES = 5;
+// Максимум профессий в отчёте (US5: до 10, сортировка по соответствию)
+export const MAX_MATCHES = 10;
 
 function rationaleFor(
   affinity: Partial<Record<Category, number>>,
@@ -435,7 +435,7 @@ export function topMatches(scores: Scores, limit = MAX_MATCHES): ProfessionMatch
   );
   return results
     .sort((a, b) => b.match - a.match)
-    .slice(0, Math.min(limit, MAX_MATCHES));
+    .slice(0, Math.min(limit, results.length, MAX_MATCHES));
 }
 
 /** Есть ли хотя бы одна профессия выше порога (ФТ-2.2). */

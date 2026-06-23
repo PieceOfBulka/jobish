@@ -1,15 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatRub } from "@/lib/utils";
+import { demandBadgeClass, demandLabel } from "@/lib/market";
 import { ArrowRight, TrendingUp } from "lucide-react";
 
 export const metadata = { title: "Профессии — Jobish" };
-
-const demandColor: Record<string, string> = {
-  высокая: "bg-emerald-50 text-emerald-700",
-  средняя: "bg-amber-50 text-amber-700",
-  низкая: "bg-slate-100 text-slate-600",
-};
 
 export default async function ProfessionsPage() {
   const professions = await prisma.profession.findMany({
@@ -39,8 +34,8 @@ export default async function ProfessionsPage() {
             <div className="flex items-center justify-between">
               <span className="badge bg-brand-50 text-brand-700">{p.category}</span>
               {p.market && (
-                <span className={`badge ${demandColor[p.market.demandLevel] ?? "bg-slate-100"}`}>
-                  <TrendingUp className="h-3 w-3" /> спрос {p.market.demandLevel}
+                <span className={`badge ${demandBadgeClass(p.market.demandLevel)}`}>
+                  <TrendingUp className="h-3 w-3" /> {demandLabel(p.market.demandLevel)}
                 </span>
               )}
             </div>

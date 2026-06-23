@@ -1,8 +1,7 @@
-// Логика контролирующих тестов и механики "заморозки" (US7, ФТ-4).
-// Чистая логика, покрыта unit-тестами.
+// Логика контролирующих тестов (US7, ФТ-2/7). Чистая логика, покрыта unit-тестами.
+// Механика «заморозки» перенесена в Release X.
 
 export const PASS_THRESHOLD = 70; // % правильных для прохождения
-export const FREEZE_HOURS = 24; // период заморозки при неудаче
 export const LOW_SCORE = 50; // порог «неуспешного» теста (ФТ-7.8)
 
 /** Нужно ли снизить сложность следующего теста (ФТ-7.8: <50%). */
@@ -26,13 +25,9 @@ export interface AttemptResult {
   passed: boolean;
   weakTopics: string[];
   strongTopics: string[];
-  frozenUntil: Date | null;
 }
 
-export function gradeAttempt(
-  answers: GradedAnswer[],
-  now: Date = new Date(),
-): AttemptResult {
+export function gradeAttempt(answers: GradedAnswer[]): AttemptResult {
   const total = answers.length;
   const correctCount = answers.filter((a) => a.correct).length;
   const score = total > 0 ? Math.round((correctCount / total) * 100) : 0;
@@ -52,11 +47,7 @@ export function gradeAttempt(
     else strongTopics.push(topic);
   }
 
-  const frozenUntil = passed
-    ? null
-    : new Date(now.getTime() + FREEZE_HOURS * 60 * 60 * 1000);
-
-  return { score, passed, weakTopics, strongTopics, frozenUntil };
+  return { score, passed, weakTopics, strongTopics };
 }
 
 /** Краткий вывод по результату теста (ФТ-2.4). */
@@ -75,23 +66,4 @@ export function buildConclusion(
     return `Результат ${score}%. Сосредоточьтесь на слабых темах: ${weakTopics.join(", ")} — и попробуйте снова.`;
   }
   return `Результат ${score}%. Рекомендуем повторить материал и пройти тест ещё раз.`;
-}
-
-/** Можно ли проходить тест сейчас (учитывая заморозку и доп. попытки). */
-export function canRetake(
-  frozenUntil: Date | null,
-  extraTries: number,
-  now: Date = new Date(),
-): boolean {
-  if (!frozenUntil) return true;
-  if (now >= frozenUntil) return true;
-  return extraTries > 0;
-}
-
-export function freezeRemainingMs(
-  frozenUntil: Date | null,
-  now: Date = new Date(),
-): number {
-  if (!frozenUntil) return 0;
-  return Math.max(0, frozenUntil.getTime() - now.getTime());
 }

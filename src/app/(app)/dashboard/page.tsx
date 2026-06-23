@@ -2,7 +2,9 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { nextStreak, visitedToday } from "@/lib/streak";
+import { computeBadges, buildReminders } from "@/lib/motivation";
 import { PROFESSION_TITLES } from "@/lib/orientation";
+import { MotivationBlock } from "@/components/MotivationBlock";
 import {
   Flame,
   Compass,
@@ -29,7 +31,14 @@ export default async function DashboardPage() {
     });
   }
 
-  const [roadmap, orientation, lastAttempt] = await Promise.all([
+  // US22 — последняя рассылка для сегмента пользователя
+  const segments = ["all", user.plan === "free" ? "free" : "paid"];
+  const announcement = await prisma.notification.findFirst({
+    where: { segment: { in: segments } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const [roadmap, orientation, lastAttempt, goalsCount, passedTests] = await Promise.all([
     prisma.roadmap.findFirst({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -41,6 +50,8 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
       include: { test: true },
     }),
+    prisma.careerGoal.count({ where: { userId: user.id } }),
+    prisma.theoryAttempt.count({ where: { userId: user.id, passed: true } }),
   ]);
 
   const allSteps = roadmap?.stages.flatMap((s) => s.steps) ?? [];
@@ -53,8 +64,33 @@ export default async function DashboardPage() {
     ? (PROFESSION_TITLES[profile.targetProfession] ?? profile.targetProfession)
     : null;
 
+  const badges = computeBadges({
+    streakDays: streak,
+    roadmapProgress: progress,
+    testsPassed: passedTests,
+    orientationDone: Boolean(orientation),
+    goalsSet: goalsCount > 0,
+  });
+  const lastTestDaysAgo = lastAttempt
+    ? Math.floor((Date.now() - lastAttempt.createdAt.getTime()) / (24 * 60 * 60 * 1000))
+    : null;
+  const reminders = buildReminders({
+    visitedToday: profile ? visitedToday(profile.lastVisit) : true,
+    roadmapProgress: progress,
+    hasRoadmap: Boolean(roadmap),
+    lastTestDaysAgo,
+    goalsSet: goalsCount > 0,
+  });
+
   return (
     <div className="container-page py-8">
+      {announcement && (
+        <div className="mb-6 rounded-2xl border border-brand-100 bg-brand-50 px-5 py-4">
+          <p className="text-sm font-semibold text-brand-800">📣 {announcement.title}</p>
+          <p className="mt-1 text-sm text-brand-700">{announcement.body}</p>
+        </div>
+      )}
+
       {/* Greeting */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -78,7 +114,7 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="mt-8 grid gap-5 md:grid-cols-3">
-        <div className="card p-6">
+        <Link href={roadmap ? "/roadmap" : "/professions"} className="card card-hover block p-6">
           <div className="flex items-center justify-between">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-600">
               <Map className="h-5 w-5" />
@@ -92,9 +128,9 @@ export default async function DashboardPage() {
           <p className="mt-2 text-xs text-slate-500">
             {roadmap ? `${doneSteps} из ${allSteps.length} навыков освоено` : "Карта ещё не создана"}
           </p>
-        </div>
+        </Link>
 
-        <div className="card p-6">
+        <Link href="/orientation" className="card card-hover block p-6">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent-400/15 text-accent-600">
             <Compass className="h-5 w-5" />
           </span>
@@ -102,12 +138,12 @@ export default async function DashboardPage() {
           <p className="mt-1 text-sm text-slate-500">
             {orientation ? "Тест пройден — смотрите рекомендации" : "Ещё не пройдена"}
           </p>
-          <Link href="/orientation" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-600">
+          <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-600">
             {orientation ? "Пройти заново" : "Пройти тест"} <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+          </span>
+        </Link>
 
-        <div className="card p-6">
+        <Link href="/tests" className="card card-hover block p-6">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
             <ClipboardCheck className="h-5 w-5" />
           </span>
@@ -120,10 +156,10 @@ export default async function DashboardPage() {
           ) : (
             <p className="mt-1 text-sm text-slate-500">Ещё не проходили</p>
           )}
-          <Link href="/tests" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-600">
+          <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-600">
             К тестам <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+          </span>
+        </Link>
       </div>
 
       {/* Quick actions */}
@@ -153,6 +189,15 @@ export default async function DashboardPage() {
           </div>
         </Link>
       </div>
+
+      {profile?.careerPortrait && (
+        <div className="mt-8 card p-5">
+          <h2 className="text-sm font-semibold text-brand-700">Карьерный портрет</h2>
+          <p className="mt-2 text-sm text-slate-600">{profile.careerPortrait}</p>
+        </div>
+      )}
+
+      <MotivationBlock badges={badges} reminders={reminders} />
     </div>
   );
 }

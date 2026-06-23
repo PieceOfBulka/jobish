@@ -51,7 +51,6 @@ export default async function ProfilePage() {
           gradeLevel={profile?.gradeLevel ?? ""}
           currentSpecialty={profile?.currentSpecialty ?? ""}
           currentPosition={profile?.currentPosition ?? ""}
-          preparationLevel={profile?.preparationLevel ?? ""}
           salaryExpectation={profile?.salaryExpectation != null ? String(profile.salaryExpectation) : ""}
           skills={profile?.skills ? JSON.parse(profile.skills).join(", ") : ""}
           bio={profile?.bio ?? ""}
@@ -69,6 +68,12 @@ export default async function ProfilePage() {
           }))}
           hasTrack={Boolean(profile?.targetProfession)}
         />
+      </div>
+
+      <div className="mt-4 text-center">
+        <Link href="/goals" className="text-sm font-medium text-brand-600 hover:underline">
+          Открыть раздел «Карьерные цели» с диагностикой →
+        </Link>
       </div>
     </div>
   );

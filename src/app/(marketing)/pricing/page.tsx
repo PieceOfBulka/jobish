@@ -1,12 +1,21 @@
 import { PLANS } from "@/lib/plans";
 import { PlanCard } from "@/components/PlanCard";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { Info } from "lucide-react";
 
 export const metadata = { title: "Тарифы — Jobish" };
 
 export default async function PricingPage() {
   const user = await getCurrentUser();
+
+  // Цены/доступность управляются из админки (US19); фичи берём из конфигурации
+  const dbPlans = await prisma.plan.findMany({ orderBy: { sort: "asc" } });
+  const priceById = new Map(dbPlans.map((p) => [p.id, p]));
+  const plans = PLANS.filter((p) => priceById.get(p.id)?.active ?? true).map((p) => ({
+    ...p,
+    price: priceById.get(p.id)?.price ?? p.price,
+  }));
   return (
     <div className="container-page py-16">
       <div className="mx-auto max-w-2xl text-center">
@@ -25,7 +34,7 @@ export default async function PricingPage() {
       </div>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {PLANS.map((p) => (
+        {plans.map((p) => (
           <PlanCard key={p.id} plan={p} isAuthed={Boolean(user)} currentPlan={user?.plan} />
         ))}
       </div>

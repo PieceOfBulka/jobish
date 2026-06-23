@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { formatRub } from "@/lib/utils";
+import { formatDemandLevel } from "@/lib/market";
 import { SalaryChart, type SalaryPoint } from "@/components/SalaryChart";
 import { SalaryStats } from "@/components/SalaryStats";
 import { ChooseTrackButton } from "@/components/ChooseTrackButton";
@@ -91,8 +92,8 @@ export default async function ProfessionDetail({
                 {new Intl.NumberFormat("ru-RU").format(profession.market.openVacancies)}
               </p>
               <p className="mt-3 text-sm text-slate-500">Спрос на рынке</p>
-              <p className="mt-1 text-lg font-semibold capitalize text-brand-700">
-                {profession.market.demandLevel}
+              <p className="mt-1 text-lg font-semibold text-brand-700">
+                {formatDemandLevel(profession.market.demandLevel)}
               </p>
             </div>
             <div className="card grid grid-cols-3 gap-2 p-5">
@@ -235,11 +236,22 @@ export default async function ProfessionDetail({
             </div>
           </div>
           <div className="card p-6">
-            <h3 className="font-semibold text-ink">Soft skills</h3>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {soft.map((s) => (
-                <span key={s.id} className="badge bg-accent-400/15 text-accent-600">{s.name}</span>
-              ))}
+            <h3 className="font-semibold text-ink">Soft skills по грейдам</h3>
+            <div className="mt-4 space-y-4">
+              {GRADES.map((g) => {
+                const list = soft.filter((s) => s.grade === g.key);
+                if (!list.length) return null;
+                return (
+                  <div key={g.key}>
+                    <p className="text-xs font-medium uppercase tracking-wide text-accent-600">{g.label}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      {list.map((s) => (
+                        <span key={s.id} className="badge bg-accent-400/15 text-accent-600">{s.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <h3 className="mt-6 font-semibold text-ink">Материалы для старта</h3>
             <ul className="mt-3 space-y-2">

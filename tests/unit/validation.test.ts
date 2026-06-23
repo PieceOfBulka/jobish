@@ -8,6 +8,8 @@ import {
   validateAge,
   validateExperienceMonths,
   validateSkillTags,
+  normalizeCourseLink,
+  isValidHttpUrl,
   GRADE_LEVELS,
   CURRENT_POSITIONS,
 } from "../../src/lib/validation";
@@ -109,6 +111,21 @@ describe("validateSkillTags", () => {
   it("rejects empty tag and >10 tags", () => {
     expect(validateSkillTags(["js", ""]).ok).toBe(false);
     expect(validateSkillTags(Array(11).fill("x")).ok).toBe(false);
+  });
+});
+
+describe("normalizeCourseLink", () => {
+  it("accepts valid course url with optional title", () => {
+    expect(normalizeCourseLink("", "https://stepik.org/course/1").ok).toBe(true);
+    expect(normalizeCourseLink("React курс", "https://stepik.org/course/1").title).toBe(
+      "React курс",
+    );
+  });
+
+  it("rejects title without url or invalid url", () => {
+    expect(normalizeCourseLink("Курс", "").ok).toBe(false);
+    expect(normalizeCourseLink("", "not-a-url").ok).toBe(false);
+    expect(isValidHttpUrl("ftp://x.com")).toBe(false);
   });
 });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth";
 import { generateRoadmap } from "@/lib/roadmap";
+import { autoGenerateGoalsForUser } from "@/lib/goals-service";
 
 const schema = z.object({ slug: z.string().min(1) });
 
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const roadmap = await generateRoadmap(userId, parsed.data.slug);
+    await autoGenerateGoalsForUser(userId);
     return NextResponse.json({ ok: true, roadmapId: roadmap.id });
   } catch (e) {
     return NextResponse.json(

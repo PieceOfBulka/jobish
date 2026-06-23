@@ -4,7 +4,6 @@ import { getUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   gradeAttempt,
-  canRetake,
   buildConclusion,
   shouldLowerDifficulty,
   type GradedAnswer,
@@ -31,33 +30,12 @@ export async function POST(req: NextRequest) {
   });
   if (!test) return NextResponse.json({ error: "Тест не найден" }, { status: 404 });
 
-  // Проверяем заморозку по последней попытке
-  const last = await prisma.theoryAttempt.findFirst({
-    where: { userId, testId },
-    orderBy: { createdAt: "desc" },
-  });
-  if (last && !canRetake(last.frozenUntil, last.extraTries)) {
-    return NextResponse.json(
-      { error: "Тест заморожен. Дождитесь окончания или используйте доп. попытку." },
-      { status: 403 },
-    );
-  }
-
   const graded: GradedAnswer[] = test.questions.map((q) => ({
     questionId: q.id,
     topic: q.topic,
     correct: answers[q.id] === q.correct,
   }));
   const result = gradeAttempt(graded);
-
-  // Если была доступная доп. попытка из-за заморозки — расходуем её
-  const extraTries = 0;
-  if (last && last.frozenUntil && last.frozenUntil > new Date() && last.extraTries > 0) {
-    await prisma.theoryAttempt.update({
-      where: { id: last.id },
-      data: { extraTries: last.extraTries - 1 },
-    });
-  }
 
   await prisma.theoryAttempt.create({
     data: {
@@ -66,8 +44,6 @@ export async function POST(req: NextRequest) {
       score: result.score,
       passed: result.passed,
       weakTopics: JSON.stringify(result.weakTopics),
-      frozenUntil: result.frozenUntil,
-      extraTries,
     },
   });
 
@@ -78,6 +54,29 @@ export async function POST(req: NextRequest) {
       lowerDifficulty: shouldLowerDifficulty(result.score) ? true : result.passed ? false : undefined,
     },
   });
+
+  // (7) Автоотметка этапа карты при успешной сдаче теста по целевой профессии
+  let stageCompleted: string | null = null;
+  if (result.passed) {
+    const roadmap = await prisma.roadmap.findFirst({
+      where: { userId, professionSlug: test.profession.slug },
+      orderBy: { createdAt: "desc" },
+      include: { stages: { orderBy: { order: "asc" }, include: { steps: true } } },
+    });
+    if (roadmap) {
+      // первый этап, где есть незавершённые шаги
+      const stage = roadmap.stages.find((s) =>
+        s.steps.some((st) => st.status !== "done"),
+      );
+      if (stage) {
+        await prisma.roadmapStep.updateMany({
+          where: { stageId: stage.id },
+          data: { status: "done" },
+        });
+        stageCompleted = stage.title;
+      }
+    }
+  }
 
   // ФТ-2.4 — рекомендации курсов (приоритет материалам по слабым темам)
   const materials = test.profession.materials;
@@ -99,10 +98,10 @@ export async function POST(req: NextRequest) {
     passed: result.passed,
     weakTopics: result.weakTopics,
     strongTopics: result.strongTopics,
-    frozenUntil: result.frozenUntil,
     total: test.questions.length,
     correctCount: graded.filter((g) => g.correct).length,
     conclusion: buildConclusion(result.score, result.passed, result.weakTopics),
     recommendations,
+    stageCompleted,
   });
 }

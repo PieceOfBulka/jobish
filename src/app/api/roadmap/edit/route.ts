@@ -8,6 +8,7 @@ import {
   type Grade,
   type SkillType,
 } from "@/lib/roadmap-content";
+import { normalizeCourseLink } from "@/lib/validation";
 
 const STAGE_GRADES: Grade[] = ["junior", "middle", "senior"];
 
@@ -83,21 +84,50 @@ export async function POST(req: NextRequest) {
       if (!s) return notFound();
       const skillName = String(body.skillName ?? "").trim();
       if (!skillName) return NextResponse.json({ error: "Укажите навык" }, { status: 400 });
+      const link = normalizeCourseLink(body.materialTitle, body.materialUrl);
+      if (!link.ok) return NextResponse.json({ error: link.error }, { status: 400 });
       const steps = await prisma.roadmapStep.findMany({ where: { stageId: s.id } });
       await prisma.roadmapStep.create({
-        data: { stageId: s.id, skillName, order: nextOrder(steps) },
+        data: {
+          stageId: s.id,
+          skillName,
+          order: nextOrder(steps),
+          materialTitle: link.title,
+          materialUrl: link.url,
+          materialType: link.url ? "онлайн-курс" : null,
+        },
       });
       return ok();
     }
     case "edit_step": {
       const step = await ownsStep(userId, body.stepId);
       if (!step) return notFound();
+      const skillName = body.skillName != null ? String(body.skillName).trim() : undefined;
+      if (skillName === "") {
+        return NextResponse.json({ error: "Укажите навык" }, { status: 400 });
+      }
+      const hasLinkFields =
+        body.materialTitle !== undefined || body.materialUrl !== undefined;
+      let materialTitle = step.materialTitle;
+      let materialUrl = step.materialUrl;
+      let materialType = step.materialType;
+      if (hasLinkFields) {
+        const link = normalizeCourseLink(
+          body.materialTitle ?? step.materialTitle,
+          body.materialUrl ?? step.materialUrl,
+        );
+        if (!link.ok) return NextResponse.json({ error: link.error }, { status: 400 });
+        materialTitle = link.title ?? null;
+        materialUrl = link.url ?? null;
+        materialType = link.url ? "онлайн-курс" : null;
+      }
       await prisma.roadmapStep.update({
         where: { id: step.id },
         data: {
-          skillName: body.skillName ? String(body.skillName).trim() : undefined,
-          materialTitle: body.materialTitle ?? undefined,
-          materialUrl: body.materialUrl ?? undefined,
+          skillName,
+          materialTitle,
+          materialUrl,
+          materialType,
         },
       });
       return ok();

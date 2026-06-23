@@ -12,7 +12,9 @@ import {
   Map,
   ClipboardCheck,
   Briefcase,
+  Target,
   User,
+  ShieldCheck,
   LogOut,
   Menu,
   X,
@@ -25,10 +27,11 @@ const LINKS = [
   { href: "/roadmap", label: "Карта развития", icon: Map },
   { href: "/vacancies", label: "Вакансии", icon: Briefcase },
   { href: "/tests", label: "Тесты", icon: ClipboardCheck },
+  { href: "/goals", label: "Карьерные цели", icon: Target },
   { href: "/profile", label: "Профиль", icon: User },
 ];
 
-export function AppSidebar({ name, plan }: { name: string; plan: string }) {
+export function AppSidebar({ name, plan, role }: { name: string; plan: string; role: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -63,7 +66,7 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-100 bg-white transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-slate-100 bg-white transition-transform lg:sticky lg:top-0 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -74,7 +77,16 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-2">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
+          {role === "admin" && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 rounded-xl bg-brand-600 px-3 py-2.5 text-sm font-medium text-white"
+            >
+              <ShieldCheck className="h-5 w-5" /> Админ-панель
+            </Link>
+          )}
           {LINKS.map((l) => {
             const active = pathname === l.href || pathname.startsWith(l.href + "/");
             return (
@@ -96,11 +108,20 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
           })}
         </nav>
 
-        <div className="border-t border-slate-100 p-3">
-          <div className="mb-2 rounded-xl bg-slate-50 px-3 py-2.5">
-            <p className="truncate text-sm font-medium text-ink">{name}</p>
-            <p className="text-xs text-slate-500">Тариф: {planLabel[plan] ?? plan}</p>
-          </div>
+        <div className="shrink-0 border-t border-slate-100 p-3">
+          <Link
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className="mb-2 flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5 transition-colors hover:bg-brand-50"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+              {name.charAt(0).toUpperCase()}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium text-ink">{name}</span>
+              <span className="block text-xs text-slate-500">Тариф: {planLabel[plan] ?? plan}</span>
+            </span>
+          </Link>
           <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600">
             <LogOut className="h-5 w-5" />
             Выйти

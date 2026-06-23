@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, CheckCircle2, XCircle, Lock, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 interface Question {
   id: string;
@@ -17,11 +17,11 @@ interface Result {
   passed: boolean;
   weakTopics: string[];
   strongTopics: string[];
-  frozenUntil: string | null;
   total: number;
   correctCount: number;
   conclusion: string;
   recommendations: { title: string; url: string; provider: string }[];
+  stageCompleted: string | null;
 }
 
 export function TheoryQuiz({
@@ -61,7 +61,6 @@ export function TheoryQuiz({
   }
 
   if (result) {
-    const frozenUntil = result.frozenUntil ? new Date(result.frozenUntil) : null;
     return (
       <div className="card p-8 text-center" style={{ animation: "var(--animate-fade-up)" }}>
         <span className={`mx-auto grid h-16 w-16 place-items-center rounded-2xl ${result.passed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
@@ -113,10 +112,10 @@ export function TheoryQuiz({
           </div>
         )}
 
-        {!result.passed && frozenUntil && (
-          <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-            <Lock className="h-4 w-4" />
-            Тест заморожен до {frozenUntil.toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
+        {result.stageCompleted && (
+          <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <CheckCircle2 className="h-4 w-4" />
+            Этап «{result.stageCompleted}» отмечен пройденным на карте развития
           </div>
         )}
 

@@ -108,9 +108,6 @@ export const CURRENT_POSITIONS = [
 ] as const;
 export type CurrentPosition = (typeof CURRENT_POSITIONS)[number];
 
-export const PREPARATION_LEVELS = ["Студент", "Выпускник", "Джун"] as const;
-export type PreparationLevel = (typeof PREPARATION_LEVELS)[number];
-
 export const USER_ROLES = ["client", "coach", "admin"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
@@ -124,4 +121,29 @@ export function validateSkillTags(tags: string[]): ValidationResult {
     return { ok: false, error: "Не более 10 тегов" };
   }
   return { ok: true };
+}
+
+export function isValidHttpUrl(value: string): boolean {
+  try {
+    const u = new URL(value.trim());
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+export function normalizeCourseLink(
+  title?: string | null,
+  url?: string | null,
+): ValidationResult & { title?: string | null; url?: string | null } {
+  const t = title?.trim() ?? "";
+  const u = url?.trim() ?? "";
+  if (!t && !u) return { ok: true, title: null, url: null };
+  if (u && !isValidHttpUrl(u)) {
+    return { ok: false, error: "Укажите корректную ссылку (http или https)" };
+  }
+  if (t && !u) {
+    return { ok: false, error: "Добавьте ссылку на курс" };
+  }
+  return { ok: true, title: t || "Курс", url: u };
 }

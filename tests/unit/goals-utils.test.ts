@@ -2,21 +2,63 @@ import { describe, it, expect } from "vitest";
 import { generateGoals } from "../../src/lib/goals";
 import { formatRub, pluralRu } from "../../src/lib/utils";
 
+const baseCtx = {
+  professionTitle: "Frontend-разработчик",
+  experienceMonths: 6,
+  roadmapDone: 0,
+  roadmapTotal: 12,
+  inProgressSkills: [] as string[],
+  weakTopics: [] as string[],
+};
+
 describe("generateGoals", () => {
-  it("creates beginner-oriented goals for low experience (<24 months)", () => {
-    const goals = generateGoals("Frontend-разработчик", 6);
-    expect(goals.length).toBeGreaterThanOrEqual(2);
-    expect(goals[0].title).toMatch(/Junior/i);
+  it("creates beginner-oriented goals for low experience", () => {
+    const goals = generateGoals(baseCtx);
+    expect(goals).toHaveLength(4);
+    expect(goals[0].title).toMatch(/Junior|стек|карту/i);
     expect(goals.some((g) => g.title.includes("Frontend-разработчик"))).toBe(true);
   });
 
-  it("creates growth-oriented goals for experienced users (>=24 months)", () => {
-    const goals = generateGoals("Аналитик данных", 60);
-    expect(goals[0].title).toMatch(/Middle|Senior/i);
+  it("creates growth-oriented goals for experienced users", () => {
+    const goals = generateGoals({
+      ...baseCtx,
+      professionTitle: "Аналитик данных",
+      experienceMonths: 60,
+      roadmapDone: 4,
+      roadmapTotal: 15,
+    });
+    expect(goals[0].title).toMatch(/Middle|грейд|пробелы/i);
+  });
+
+  it("adapts short-term goal when roadmap progress is high", () => {
+    const goals = generateGoals({
+      ...baseCtx,
+      roadmapDone: 11,
+      roadmapTotal: 12,
+    });
+    expect(goals[0].title).toMatch(/собеседован|mock|пробелы/i);
+    expect(goals[0].rationale).toMatch(/91%|11\/12/);
+  });
+
+  it("rotates wording on refresh variant", () => {
+    const a = generateGoals({ ...baseCtx, variant: 0 });
+    const b = generateGoals({ ...baseCtx, variant: 1 });
+    expect(a[0].title).not.toBe(b[0].title);
+  });
+
+  it("includes weak topics in rationale when provided", () => {
+    const goals = generateGoals({
+      ...baseCtx,
+      roadmapDone: 6,
+      roadmapTotal: 12,
+      weakTopics: ["TypeScript", "Тестирование"],
+      variant: 2,
+    });
+    expect(goals[0].rationale + goals[0].title).toMatch(/TypeScript|Тестирование/);
   });
 
   it("always includes a habit goal", () => {
-    const goals = generateGoals("QA-инженер", 36);
+    const goals = generateGoals({ ...baseCtx, experienceMonths: 36, variant: 0 });
     expect(goals.some((g) => g.horizon === "постоянно")).toBe(true);
   });
 });

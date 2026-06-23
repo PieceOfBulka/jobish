@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, MailCheck } from "lucide-react";
 
 export function VerifyForm({ initialCode }: { initialCode?: string }) {
-  const router = useRouter();
   const [code, setCode] = useState(initialCode ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +16,7 @@ export function VerifyForm({ initialCode }: { initialCode?: string }) {
     const res = await fetch("/api/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
       body: JSON.stringify({ code }),
     });
     const data = await res.json();
@@ -26,13 +25,12 @@ export function VerifyForm({ initialCode }: { initialCode?: string }) {
       setError(data.error ?? "Ошибка");
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+    window.location.assign("/dashboard");
   }
 
   async function resend() {
     setError(null);
-    const res = await fetch("/api/auth/verify", { method: "PUT" });
+    const res = await fetch("/api/auth/verify", { method: "PUT", credentials: "same-origin" });
     const data = await res.json();
     if (res.ok) {
       setDemoCode(data.demoCode);

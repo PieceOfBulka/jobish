@@ -2,6 +2,11 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
+import { PLANS } from "../src/lib/plans";
+import { DEMO_ACCOUNT, ADMIN_ACCOUNT } from "../src/lib/demo-account";
+import { generateRoadmap } from "../src/lib/roadmap";
+import { scoreAnswers, topMatches } from "../src/lib/orientation";
+import { fetchHhVacancies } from "../src/lib/hh";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./dev.db",
@@ -82,8 +87,40 @@ function makeVacancies(
     salaryMax: g.max,
     experience: g.exp,
     employment: EMPLOYMENTS[i % EMPLOYMENTS.length],
-    url: "https://hh.ru/",
+    url: "",
   }));
+}
+
+async function seedVacancies(
+  professionId: string,
+  title: string,
+  companies: { name: string; salary: number }[],
+  salary: [number, number, number],
+) {
+  const live = await fetchHhVacancies(title, { perPage: 9 });
+  if (live.length > 0) {
+    await prisma.vacancy.createMany({
+      data: live.map((v) => ({
+        professionId,
+        title: v.title,
+        company: v.company,
+        city: v.city,
+        format: v.format,
+        salaryMin: v.salaryMin,
+        salaryMax: v.salaryMax,
+        experience: v.experience,
+        employment: v.employment,
+        url: v.url,
+      })),
+    });
+    return;
+  }
+  await prisma.vacancy.createMany({
+    data: makeVacancies(title, companies, salary).map((v) => ({
+      ...v,
+      professionId,
+    })),
+  });
 }
 
 function trend(base: [number, number, number]) {
@@ -116,7 +153,7 @@ const PROFESSIONS: ProfSeed[] = [
       { name: "Менторство", type: "soft", grade: "senior" },
     ],
     market: {
-      demandLevel: "высокая",
+      demandLevel: "высокий",
       openVacancies: 12400,
       salary: [80000, 180000, 320000],
       topCompanies: [
@@ -126,10 +163,14 @@ const PROFESSIONS: ProfSeed[] = [
       ],
     },
     materials: [
-      { skillName: "HTML и CSS", title: "HTML Academy: Основы", url: "https://htmlacademy.ru/", provider: "HTML Academy" },
+      { skillName: "HTML и CSS", title: "HTML Academy: Основы", url: "https://htmlacademy.ru/courses", provider: "HTML Academy" },
       { skillName: "JavaScript (ES6+)", title: "learn.javascript.ru", url: "https://learn.javascript.ru/", provider: "learn.js" },
       { skillName: "React", title: "React — официальная документация", url: "https://react.dev/learn", provider: "react.dev" },
       { skillName: "TypeScript", title: "TypeScript Handbook", url: "https://www.typescriptlang.org/docs/", provider: "TS" },
+      { skillName: "Архитектура и оптимизация", title: "Patterns.dev", url: "https://www.patterns.dev/", provider: "patterns.dev" },
+      { skillName: "Коммуникация в команде", title: "Soft skills для разработчиков", url: "https://habr.com/ru/hubs/career/", provider: "Habr" },
+      { skillName: "Самостоятельность и поиск решений", title: "Как учиться эффективно", url: "https://learner.org/", provider: "Blog" },
+      { skillName: "Менторство", title: "The Mentoring Guide", url: "https://www.atlassian.com/team-playbook", provider: "Atlassian" },
     ],
     test: {
       title: "Основы Frontend",
@@ -161,7 +202,7 @@ const PROFESSIONS: ProfSeed[] = [
       { name: "Влияние на стейкхолдеров", type: "soft", grade: "senior" },
     ],
     market: {
-      demandLevel: "высокая",
+      demandLevel: "высокий",
       openVacancies: 8600,
       salary: [70000, 150000, 280000],
       topCompanies: [
@@ -173,7 +214,7 @@ const PROFESSIONS: ProfSeed[] = [
     materials: [
       { skillName: "SQL", title: "Stepik: Интерактивный SQL", url: "https://stepik.org/course/63054", provider: "Stepik" },
       { skillName: "Python (pandas)", title: "pandas — getting started", url: "https://pandas.pydata.org/docs/getting_started/", provider: "pandas" },
-      { skillName: "Визуализация (BI-инструменты)", title: "Основы дашбордов", url: "https://datalens.yandex/", provider: "DataLens" },
+      { skillName: "Визуализация (BI-инструменты)", title: "Основы дашбордов", url: "https://datalens.yandex.ru/", provider: "DataLens" },
       { skillName: "Статистика и A/B-тесты", title: "Основы статистики (Stepik)", url: "https://stepik.org/course/76", provider: "Stepik" },
     ],
     test: {
@@ -206,7 +247,7 @@ const PROFESSIONS: ProfSeed[] = [
       { name: "Работа с заказчиком", type: "soft", grade: "senior" },
     ],
     market: {
-      demandLevel: "средняя",
+      demandLevel: "средний",
       openVacancies: 4200,
       salary: [65000, 140000, 250000],
       topCompanies: [
@@ -251,7 +292,7 @@ const PROFESSIONS: ProfSeed[] = [
       { name: "Переговоры со стейкхолдерами", type: "soft", grade: "senior" },
     ],
     market: {
-      demandLevel: "средняя",
+      demandLevel: "средний",
       openVacancies: 5300,
       salary: [90000, 200000, 380000],
       topCompanies: [
@@ -262,9 +303,9 @@ const PROFESSIONS: ProfSeed[] = [
     },
     materials: [
       { skillName: "Работа с метриками (юнит-экономика)", title: "Юнит-экономика: основы", url: "https://gopractice.ru/", provider: "GoPractice" },
-      { skillName: "Customer Development", title: "CustDev: интервью с пользователями", url: "https://www.svyatoslav.biz/", provider: "Blog" },
+      { skillName: "Customer Development", title: "CustDev: интервью с пользователями", url: "https://gopractice.ru/", provider: "Blog" },
       { skillName: "Приоритизация и roadmap", title: "RICE и фреймворки приоритизации", url: "https://www.productplan.com/glossary/rice-scoring-model/", provider: "ProductPlan" },
-      { skillName: "Продуктовая стратегия", title: "Good Product Strategy", url: "https://svpg.com/articles/", provider: "SVPG" },
+      { skillName: "Продуктовая стратегия", title: "Good Product Strategy", url: "https://www.svpg.com/articles/", provider: "SVPG" },
     ],
     test: {
       title: "Основы продакт-менеджмента",
@@ -296,7 +337,7 @@ const PROFESSIONS: ProfSeed[] = [
       { name: "Выстраивание процессов QA", type: "soft", grade: "senior" },
     ],
     market: {
-      demandLevel: "высокая",
+      demandLevel: "высокий",
       openVacancies: 6100,
       salary: [60000, 130000, 240000],
       topCompanies: [
@@ -341,7 +382,7 @@ const PROFESSIONS: ProfSeed[] = [
       { name: "Управление ожиданиями нанимающих", type: "soft", grade: "senior" },
     ],
     market: {
-      demandLevel: "средняя",
+      demandLevel: "средний",
       openVacancies: 3400,
       salary: [55000, 110000, 200000],
       topCompanies: [
@@ -351,10 +392,10 @@ const PROFESSIONS: ProfSeed[] = [
       ],
     },
     materials: [
-      { skillName: "Поиск кандидатов (sourcing)", title: "Boolean search для рекрутера", url: "https://amazinghiring.ru/", provider: "Blog" },
+      { skillName: "Поиск кандидатов (sourcing)", title: "Boolean search для рекрутера", url: "https://habr.com/ru/hubs/recruitment/", provider: "Blog" },
       { skillName: "Проведение интервью", title: "Структурированное интервью", url: "https://hbr.org/", provider: "HBR" },
       { skillName: "Понимание IT-ролей и стека", title: "Кто есть кто в IT", url: "https://habr.com/ru/", provider: "Habr" },
-      { skillName: "Аналитика найма", title: "Метрики рекрутинга", url: "https://www.aihr.com/", provider: "AIHR" },
+      { skillName: "Аналитика найма", title: "Метрики рекрутинга", url: "https://www.aihr.com/blog/recruiting-metrics/", provider: "AIHR" },
     ],
     test: {
       title: "Основы IT-рекрутинга",
@@ -369,6 +410,181 @@ const PROFESSIONS: ProfSeed[] = [
     },
   },
 ];
+
+async function seedDemoJourney(userId: string) {
+  const slug = "frontend-developer";
+  const answers = { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6: 0 };
+  const scores = scoreAnswers(answers);
+  const matches = topMatches(scores);
+
+  await prisma.orientationResult.upsert({
+    where: { userId },
+    update: {
+      answers: JSON.stringify(answers),
+      scores: JSON.stringify(scores),
+      topMatches: JSON.stringify(matches),
+    },
+    create: {
+      userId,
+      answers: JSON.stringify(answers),
+      scores: JSON.stringify(scores),
+      topMatches: JSON.stringify(matches),
+    },
+  });
+
+  await generateRoadmap(userId, slug);
+
+  const roadmap = await prisma.roadmap.findFirst({
+    where: { userId, professionSlug: slug },
+    include: {
+      stages: {
+        orderBy: { order: "asc" },
+        include: { steps: { orderBy: { order: "asc" } } },
+      },
+    },
+  });
+  if (roadmap) {
+    const steps = roadmap.stages.flatMap((stage) => stage.steps);
+    for (let i = 0; i < steps.length; i++) {
+      const status = i < 2 ? "done" : i === 2 ? "in_progress" : "not_started";
+      await prisma.roadmapStep.update({
+        where: { id: steps[i].id },
+        data: { status },
+      });
+    }
+  }
+
+  await prisma.chatMessage.deleteMany({ where: { session: { userId } } });
+  await prisma.chatSession.deleteMany({ where: { userId } });
+  await prisma.chatSession.create({
+    data: {
+      userId,
+      title: "Карьерная консультация",
+      messages: {
+        create: [
+          {
+            role: "user",
+            content: "Привет! Хочу вырасти до Middle frontend-разработчика.",
+          },
+          {
+            role: "assistant",
+            content:
+              "Отличная цель! У вас уже есть база по HTML/CSS и JavaScript. Следующий шаг — углубиться в React и TypeScript из вашей карты развития.",
+          },
+        ],
+      },
+    },
+  });
+
+  const profession = await prisma.profession.findUnique({ where: { slug } });
+  if (profession) {
+    const test = await prisma.theoryTest.findFirst({
+      where: { professionId: profession.id },
+    });
+    if (test) {
+      await prisma.theoryAttempt.deleteMany({ where: { userId, testId: test.id } });
+      await prisma.theoryAttempt.create({
+        data: {
+          userId,
+          testId: test.id,
+          score: 78,
+          passed: true,
+          weakTopics: JSON.stringify(["TypeScript"]),
+        },
+      });
+    }
+  }
+
+  await prisma.profile.update({
+    where: { userId },
+    data: {
+      experienceMonths: 18,
+      currentPosition: "Junior",
+      currentSpecialty: "Frontend",
+      educationPlace: "НИУ ВШЭ",
+      gradeLevel: "Бакалавр",
+      skills: JSON.stringify(["JavaScript", "React", "HTML/CSS"]),
+      targetProfession: slug,
+      streakDays: 7,
+      lastVisit: new Date(),
+    },
+  });
+}
+
+async function seedDemoUsers() {
+  const demoHash = await bcrypt.hash(DEMO_ACCOUNT.password, 10);
+  const adminHash = await bcrypt.hash(ADMIN_ACCOUNT.password, 10);
+
+  const demoUser = await prisma.user.upsert({
+    where: { email: DEMO_ACCOUNT.email },
+    update: {
+      name: DEMO_ACCOUNT.name,
+      passwordHash: demoHash,
+      passwordAlgo: "bcrypt",
+      isVerified: true,
+      isBlocked: false,
+      role: "client",
+    },
+    create: {
+      email: DEMO_ACCOUNT.email,
+      name: DEMO_ACCOUNT.name,
+      passwordHash: demoHash,
+      isVerified: true,
+      profile: { create: {} },
+      subscription: { create: { plan: "optimal" } },
+    },
+  });
+
+  await prisma.profile.upsert({
+    where: { userId: demoUser.id },
+    update: {},
+    create: { userId: demoUser.id },
+  });
+
+  await prisma.subscription.upsert({
+    where: { userId: demoUser.id },
+    update: { plan: "optimal" },
+    create: { userId: demoUser.id, plan: "optimal" },
+  });
+
+  await seedDemoJourney(demoUser.id);
+  console.log(`  ✓ Демо-пользователь ${DEMO_ACCOUNT.email} / ${DEMO_ACCOUNT.password}`);
+
+  const adminUser = await prisma.user.upsert({
+    where: { email: ADMIN_ACCOUNT.email },
+    update: {
+      name: ADMIN_ACCOUNT.name,
+      role: "admin",
+      passwordHash: adminHash,
+      passwordAlgo: "bcrypt",
+      isVerified: true,
+      isBlocked: false,
+    },
+    create: {
+      email: ADMIN_ACCOUNT.email,
+      name: ADMIN_ACCOUNT.name,
+      role: "admin",
+      passwordHash: adminHash,
+      isVerified: true,
+      profile: { create: {} },
+      subscription: { create: { plan: "pro" } },
+    },
+  });
+
+  await prisma.profile.upsert({
+    where: { userId: adminUser.id },
+    update: {},
+    create: { userId: adminUser.id },
+  });
+
+  await prisma.subscription.upsert({
+    where: { userId: adminUser.id },
+    update: { plan: "pro" },
+    create: { userId: adminUser.id, plan: "pro" },
+  });
+
+  console.log(`  ✓ Администратор ${ADMIN_ACCOUNT.email} / ${ADMIN_ACCOUNT.password}`);
+}
 
 async function main() {
   console.log("🌱 Засеваю базу...");
@@ -461,54 +677,42 @@ async function main() {
         },
       },
     });
-    await prisma.vacancy.createMany({
-      data: makeVacancies(p.title, p.market.topCompanies, p.market.salary).map(
-        (v) => ({ ...v, professionId: profession.id }),
-      ),
-    });
+    await seedVacancies(
+      profession.id,
+      p.title,
+      p.market.topCompanies,
+      p.market.salary,
+    );
 
     console.log(`  ✓ ${p.title}`);
   }
 
-  // Демо-пользователь
-  const email = "demo@jobish.ru";
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (!existing) {
-    await prisma.user.create({
-      data: {
-        email,
-        name: "Демо Пользователь",
-        passwordHash: await bcrypt.hash("Demo1234!", 10),
-        isVerified: true,
-        profile: {
-          create: {
-            experienceMonths: 12,
-            currentPosition: "Junior",
-            currentSpecialty: "Студент",
-            educationPlace: "НИУ ВШЭ",
-            gradeLevel: "Бакалавр",
-            preparationLevel: "Студент",
-          },
-        },
-        subscription: { create: { plan: "free" } },
-      },
-    });
-    console.log("  ✓ Демо-пользователь demo@jobish.ru / Demo1234!");
+  // Демо-пользователь и администратор (upsert — пароль и данные обновляются при каждом seed)
+  await seedDemoUsers();
 
-    // Администратор (роль назначается вручную — ФТ-1.5)
-    await prisma.user.create({
-      data: {
-        email: "admin@jobish.ru",
-        name: "Администратор",
-        role: "admin",
-        passwordHash: await bcrypt.hash("Admin1234!", 10),
-        isVerified: true,
-        profile: { create: {} },
-        subscription: { create: { plan: "pro" } },
-      },
+  for (const provider of [
+    { code: "google", name: "Google" },
+    { code: "vk", name: "VK ID" },
+    { code: "yandex", name: "Яндекс ID" },
+  ]) {
+    await prisma.authProvider.upsert({
+      where: { code: provider.code },
+      update: { name: provider.name, isActive: true },
+      create: provider,
     });
-    console.log("  ✓ Администратор admin@jobish.ru / Admin1234!");
   }
+  console.log("  ✓ SSO-провайдеры");
+
+  // Тарифы (US19)
+  for (let i = 0; i < PLANS.length; i++) {
+    const p = PLANS[i];
+    await prisma.plan.upsert({
+      where: { id: p.id },
+      update: { name: p.name, price: p.price, period: p.period, sort: i },
+      create: { id: p.id, name: p.name, price: p.price, period: p.period, sort: i },
+    });
+  }
+  console.log("  ✓ Тарифы");
 
   console.log("✅ Готово.");
 }

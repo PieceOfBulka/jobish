@@ -1,4 +1,3 @@
-import "server-only";
 import { prisma } from "./prisma";
 import {
   GRADE_STAGES,
@@ -22,7 +21,6 @@ export async function generateRoadmap(userId: string, slug: string) {
   });
   if (!profession) throw new Error("Профессия не найдена");
 
-  // Удаляем прежний roadmap по этой профессии (идемпотентность)
   await prisma.roadmap.deleteMany({
     where: { userId, professionSlug: slug },
   });
@@ -30,6 +28,21 @@ export async function generateRoadmap(userId: string, slug: string) {
   const materialBySkill = new Map(
     profession.materials.map((m) => [m.skillName, m]),
   );
+
+  const fallbackMaterial = (skillName: string, type: string) => {
+    if (type === "soft") {
+      return {
+        title: `Soft skills: ${skillName}`,
+        url: "https://habr.com/ru/hubs/career/",
+        provider: "Habr Career",
+      };
+    }
+    return {
+      title: `Курс по «${skillName}»`,
+      url: `https://stepik.org/catalog/search?query=${encodeURIComponent(skillName)}`,
+      provider: "Stepik",
+    };
+  };
 
   const roadmap = await prisma.roadmap.create({
     data: {
@@ -53,19 +66,18 @@ export async function generateRoadmap(userId: string, slug: string) {
             order: si,
             steps: {
               create: stageSkills.map((s, idx) => {
-                const mat = materialBySkill.get(s.name);
+                const mat = materialBySkill.get(s.name) ?? fallbackMaterial(s.name, s.type);
                 const type = s.type as SkillType;
                 return {
                   skillName: s.name,
                   skillType: type,
                   order: idx,
-                  // метаданные материала — только если материал реально есть
-                  materialTitle: mat?.title ?? null,
-                  materialUrl: mat?.url ?? null,
-                  materialAuthor: mat?.provider ?? null,
-                  materialType: mat ? "онлайн-курс" : null,
-                  materialDuration: null,
-                  materialRating: null,
+                  materialTitle: mat.title,
+                  materialUrl: mat.url,
+                  materialAuthor: mat.provider,
+                  materialType: s.type === "soft" ? "статья" : "онлайн-курс",
+                  materialDuration: s.type === "soft" ? 45 : 90,
+                  materialRating: materialBySkill.has(s.name) ? 4.5 : null,
                   estimateHours: estimateForSkill(type, stage.key as Grade),
                 };
               }),

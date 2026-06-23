@@ -8,7 +8,6 @@ import {
   validateExperienceMonths,
   GRADE_LEVELS,
   CURRENT_POSITIONS,
-  PREPARATION_LEVELS,
 } from "@/lib/validation";
 
 // ФТ-1.3 — редактирование профиля (наполнение по логической модели v2)
@@ -44,9 +43,6 @@ export async function PATCH(req: NextRequest) {
   if (b.currentPosition && !CURRENT_POSITIONS.includes(b.currentPosition)) {
     return NextResponse.json({ error: "Неверная должность" }, { status: 400 });
   }
-  if (b.preparationLevel && !PREPARATION_LEVELS.includes(b.preparationLevel)) {
-    return NextResponse.json({ error: "Неверный уровень подготовки" }, { status: 400 });
-  }
 
   const salary =
     b.salaryExpectation === "" || b.salaryExpectation == null
@@ -67,7 +63,6 @@ export async function PATCH(req: NextRequest) {
       gradeLevel: b.gradeLevel || null,
       currentSpecialty: b.currentSpecialty || null,
       currentPosition: b.currentPosition || null,
-      preparationLevel: b.preparationLevel || null,
       salaryExpectation: salary,
       skills: Array.isArray(b.skills) ? JSON.stringify(b.skills) : undefined,
       desiredSpheres: Array.isArray(b.desiredSpheres) ? JSON.stringify(b.desiredSpheres) : undefined,

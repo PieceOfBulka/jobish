@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Upload, Check, Trash2 } from "lucide-react";
-import { GRADE_LEVELS, CURRENT_POSITIONS, PREPARATION_LEVELS } from "@/lib/validation";
+import { GRADE_LEVELS, CURRENT_POSITIONS } from "@/lib/validation";
 
 export interface ProfileData {
   name: string;
@@ -14,7 +14,6 @@ export interface ProfileData {
   gradeLevel: string;
   currentSpecialty: string;
   currentPosition: string;
-  preparationLevel: string;
   salaryExpectation: string;
   skills: string; // через запятую
   bio: string;
@@ -84,14 +83,7 @@ export function ProfileForm(initial: ProfileData) {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <label className="label">Уровень подготовки *</label>
-          <select className="input" value={form.preparationLevel} onChange={(e) => set("preparationLevel", e.target.value)}>
-            <option value="">—</option>
-            {PREPARATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-          </select>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="label">Текущая должность</label>
           <select className="input" value={form.currentPosition} onChange={(e) => set("currentPosition", e.target.value)}>

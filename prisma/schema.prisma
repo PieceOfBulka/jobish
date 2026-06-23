@@ -15,7 +15,7 @@ datasource db {
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
-  passwordHash      String
+  passwordHash      String? // null for SSO-only accounts
   passwordAlgo      String    @default("bcrypt") // bcrypt | argon2 | pbkdf2
   passwordUpdatedAt DateTime  @default(now())
   name              String
@@ -33,6 +33,29 @@ model User {
   attempts     TheoryAttempt[]
   chatSessions ChatSession[]
   subscription Subscription?
+  authAccounts UserAuthAccount[]
+}
+
+// SSO providers (google | vk | telegram)
+model AuthProvider {
+  code     String            @id
+  name     String
+  isActive Boolean           @default(true)
+  accounts UserAuthAccount[]
+}
+
+model UserAuthAccount {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerCode   String
+  provider       AuthProvider @relation(fields: [providerCode], references: [code])
+  providerUserId String
+  email          String?
+  createdAt      DateTime     @default(now())
+
+  @@unique([providerCode, providerUserId])
+  @@index([userId])
 }
 
 model Profile {
@@ -48,7 +71,6 @@ model Profile {
   gradeLevel        String? // enum уровня образования
   currentSpecialty  String? // текущая специальность
   currentPosition   String? // Junior|Middle|Senior|Lead|Head|Другое
-  preparationLevel  String? // Студент|Выпускник|Джун
   salaryExpectation Int? // ожидаемая ЗП
   skills            String? // JSON-массив тегов навыков
   desiredSpheres    String? // JSON-массив желаемых сфер
@@ -56,6 +78,7 @@ model Profile {
   targetProfession  String? // slug выбранной целевой профессии
   resumeFileName    String? // имя файла резюме (ФТ-1.4, мок хранилища)
   careerPortrait    String? // карьерный портрет (ФТ-7.4)
+  jobAlignmentResult String? // US10: JSON результатов диагностики соответствия работы целям
   lowerDifficulty   Boolean @default(false) // снижение сложности тестов (ФТ-7.8)
 
   streakDays Int       @default(0) // мотивация: ежедневная привычка (ФТ-7)
@@ -63,14 +86,23 @@ model Profile {
   updatedAt  DateTime  @updatedAt
 }
 
-// Заявки в поддержку (NFR_SP3)
-model SupportTicket {
+// Массовые уведомления (US22)
+model Notification {
   id        String   @id @default(cuid())
-  email     String
-  subject   String
-  message   String
-  status    String   @default("open") // open | answered | closed
+  title     String
+  body      String
+  segment   String   @default("all") // all | free | paid
   createdAt DateTime @default(now())
+}
+
+// Тарифные планы (US19) — редактируются админом
+model Plan {
+  id     String  @id // free | start | optimal | pro
+  name   String
+  price  Int
+  period String
+  active Boolean @default(true)
+  sort   Int     @default(0)
 }
 
 // ─────────────── Справочник профессий ───────────────
@@ -130,7 +162,7 @@ model MarketAnalytics {
   id            String     @id @default(cuid())
   professionId  String     @unique
   profession    Profession @relation(fields: [professionId], references: [id], onDelete: Cascade)
-  demandLevel   String     // низкая | средняя | высокая
+  demandLevel   String     // низкий | средний | высокий
   openVacancies Int
   salaryJunior  Int
   salaryMiddle  Int
@@ -215,8 +247,9 @@ model OrientationResult {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   answers    String   // JSON ответов
   scores     String   // JSON: соответствие по категориям
-  topMatches String   // JSON: [{slug, title, match}]
-  createdAt  DateTime @default(now())
+  topMatches         String   // JSON: [{slug, title, match}]
+  previousTopMatches String?  // US5: предыдущий результат при повторном тесте
+  createdAt          DateTime @default(now())
 }
 
 // ─────────────── Теоретические тесты (US7, ФТ-4) ───────────────

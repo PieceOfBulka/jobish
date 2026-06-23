@@ -93,9 +93,10 @@ describe("topMatches", () => {
     }
   });
 
-  it("caps at MAX_MATCHES (<=5) per ФТ-2.2", () => {
+  it("caps at MAX_MATCHES (<=10) per US5", () => {
     const matches = topMatches({ tech: 3, data: 3, design: 3, product: 3, people: 3 }, 99);
     expect(matches.length).toBeLessThanOrEqual(MAX_MATCHES);
+    expect(MAX_MATCHES).toBe(10);
   });
 
   it("includes a non-empty rationale for each match", () => {

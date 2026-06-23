@@ -14,7 +14,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen bg-canvas lg:flex-row">
-      <AppSidebar name={user.name} plan={user.plan} />
+      <AppSidebar name={user.name} plan={user.plan} role={user.role} />
       <main className="flex-1 overflow-x-hidden">{children}</main>
     </div>
   );

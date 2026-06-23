@@ -8,13 +8,35 @@ import {
   randomAnswers,
   type ProfessionMatch,
 } from "@/lib/orientation";
-import { ArrowRight, ArrowLeft, RotateCcw, Trophy, Loader2, Dice5 } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  RotateCcw,
+  Trophy,
+  Loader2,
+  Dice5,
+  MessageSquare,
+} from "lucide-react";
 
-export function OrientationQuiz({ done }: { done: boolean }) {
+export function OrientationQuiz({
+  done,
+  initialMatches = null,
+  initialPreviousMatches = null,
+  initialHasStrong = true,
+}: {
+  done: boolean;
+  initialMatches?: ProfessionMatch[] | null;
+  initialPreviousMatches?: ProfessionMatch[] | null;
+  initialHasStrong?: boolean;
+}) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [matches, setMatches] = useState<ProfessionMatch[] | null>(null);
-  const [hasStrong, setHasStrong] = useState(true);
+  const [matches, setMatches] = useState<ProfessionMatch[] | null>(initialMatches);
+  const [previousMatches, setPreviousMatches] = useState<ProfessionMatch[] | null>(
+    initialPreviousMatches,
+  );
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [hasStrong, setHasStrong] = useState(initialHasStrong);
   const [loading, setLoading] = useState(false);
 
   const q = ORIENTATION_QUESTIONS[step];
@@ -37,7 +59,9 @@ export function OrientationQuiz({ done }: { done: boolean }) {
     setLoading(false);
     if (res.ok) {
       setMatches(data.matches);
+      setPreviousMatches(data.previousMatches ?? null);
       setHasStrong(data.hasStrong);
+      if (data.chatSessionId) setChatSessionId(data.chatSessionId);
     }
   }
 
@@ -52,6 +76,8 @@ export function OrientationQuiz({ done }: { done: boolean }) {
     setStep(0);
     setAnswers({});
     setMatches(null);
+    setPreviousMatches(null);
+    setChatSessionId(null);
   }
 
   if (matches) {
@@ -64,7 +90,7 @@ export function OrientationQuiz({ done }: { done: boolean }) {
           <div>
             <h2 className="text-xl font-bold text-ink">Ваши подходящие профессии</h2>
             <p className="text-sm text-slate-500">
-              Отсортированы по уровню соответствия. Откройте карточку и выберите трек.
+              Отсортированы по уровню соответствия (до 10 профессий). Результат также отправлен в чат с AI-коучем.
             </p>
           </div>
         </div>
@@ -104,9 +130,28 @@ export function OrientationQuiz({ done }: { done: boolean }) {
             </Link>
           ))}
         </div>
-        <button onClick={restart} className="btn-ghost mt-6">
-          <RotateCcw className="h-4 w-4" /> Пройти заново
-        </button>
+        {previousMatches && previousMatches.length > 0 && (
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-700">Предыдущий результат (для сравнения)</p>
+            <ul className="mt-2 space-y-1 text-sm text-slate-600">
+              {previousMatches.map((m, i) => (
+                <li key={m.slug}>
+                  {i + 1}. {m.title} — {m.match}%
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div className="mt-6 flex flex-wrap gap-3">
+          {chatSessionId && (
+            <Link href="/coach" className="btn-primary">
+              <MessageSquare className="h-4 w-4" /> Открыть в чате
+            </Link>
+          )}
+          <button onClick={restart} className="btn-ghost">
+            <RotateCcw className="h-4 w-4" /> Пройти заново
+          </button>
+        </div>
       </div>
     );
   }

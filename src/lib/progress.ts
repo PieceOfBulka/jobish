@@ -4,22 +4,50 @@
  * Находит навыки из roadmap, упомянутые в сообщении пользователя
  * (например: «прошёл React и TypeScript»). Возвращает названия совпавших навыков.
  */
+const COMPLETED_VERB =
+  /(прош|освоил|выучил|изучил|закончил|сделал|завершил|готов|done|выполнил)/i;
+const IN_PROGRESS_VERB =
+  /(изучаю|учу|прохожу|начал|делаю|работаю над|в процессе|in progress)/i;
+
+function matchSkillNames(text: string, skillNames: string[]): string[] {
+  return skillNames.filter((name) => {
+    const key = name.toLowerCase().split(/[\s(]/)[0];
+    return key.length >= 2 && text.includes(key);
+  });
+}
+
 export function detectCompletedSkills(
   message: string,
   skillNames: string[],
 ): string[] {
   const text = message.toLowerCase();
-  // Признак сообщения о прогрессе — наличие глаголов завершения
-  const progressVerb = /(прош|освоил|выучил|изучил|закончил|сделал|завершил|готов|done|выполнил)/i.test(
-    text,
-  );
-  if (!progressVerb) return [];
-  return skillNames.filter((name) => {
-    const n = name.toLowerCase();
-    // Берём первое слово навыка как ключ (например, «React» из «React»)
-    const key = n.split(/[\s(]/)[0];
-    return key.length >= 2 && text.includes(key);
-  });
+  if (!COMPLETED_VERB.test(text)) return [];
+  return matchSkillNames(text, skillNames);
+}
+
+export function detectInProgressSkills(
+  message: string,
+  skillNames: string[],
+): string[] {
+  const text = message.toLowerCase();
+  if (!IN_PROGRESS_VERB.test(text)) return [];
+  const completed = detectCompletedSkills(message, skillNames);
+  return matchSkillNames(text, skillNames).filter((s) => !completed.includes(s));
+}
+
+export interface SkillProgressUpdate {
+  completed: string[];
+  inProgress: string[];
+}
+
+export function detectSkillProgress(
+  message: string,
+  skillNames: string[],
+): SkillProgressUpdate {
+  return {
+    completed: detectCompletedSkills(message, skillNames),
+    inProgress: detectInProgressSkills(message, skillNames),
+  };
 }
 
 /** Мотивационный блок после обновления roadmap (ФТ-7.3 / ФТ-7.5). */

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   detectCompletedSkills,
+  detectInProgressSkills,
   motivationalBlock,
   buildCareerPortrait,
 } from "../../src/lib/progress";
@@ -20,6 +21,11 @@ describe("detectCompletedSkills", () => {
   it("does not match unrelated skills", () => {
     const res = detectCompletedSkills("Я освоил React", skills);
     expect(res).toEqual(["React"]);
+  });
+
+  it("detects in-progress skills", () => {
+    const res = detectInProgressSkills("Сейчас изучаю React", skills);
+    expect(res).toContain("React");
   });
 });
 

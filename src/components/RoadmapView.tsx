@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink, Circle, CircleDot, CheckCircle2, Trophy,
-  Pencil, Plus, Trash2, ChevronUp, ChevronDown, Save, X, ArrowRight, RefreshCw,
+  Pencil, Plus, Trash2, ChevronUp, ChevronDown, Save, X, ArrowRight, RefreshCw, Link2,
 } from "lucide-react";
 import { stepHint, type SkillType, type Grade } from "@/lib/roadmap-content";
+import { isValidHttpUrl } from "@/lib/validation";
 
 type Status = "not_started" | "in_progress" | "done";
 
@@ -26,6 +27,11 @@ interface Step {
 interface Stage { id: string; title: string; description: string | null; steps: Step[] }
 
 const STAGE_GRADES: Grade[] = ["junior", "middle", "senior"];
+const GRADE_LABELS: Record<string, string> = {
+  junior: "Junior",
+  middle: "Middle",
+  senior: "Senior",
+};
 
 const NEXT: Record<Status, Status> = {
   not_started: "in_progress",
@@ -191,6 +197,9 @@ export function RoadmapView({
                               {step.skillType === "soft" ? "soft" : "hard"}
                             </span>
                           )}
+                          <span className="badge bg-brand-50 text-[10px] text-brand-700">
+                            {GRADE_LABELS[grade] ?? grade}
+                          </span>
                           {isNext && (
                             <span className="badge bg-brand-100 text-brand-700"><ArrowRight className="h-3 w-3" /> Следующий шаг</span>
                           )}
@@ -198,7 +207,7 @@ export function RoadmapView({
                         {step.skillType && step.status !== "done" && (
                           <p className="mt-0.5 text-xs text-slate-400">{stepHint(step.skillType as SkillType, grade)}</p>
                         )}
-                        {step.materialUrl ? (
+                        {!edit && step.materialUrl ? (
                           <a href={step.materialUrl} target="_blank" rel="noopener noreferrer" className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-brand-600 hover:underline">
                             <ExternalLink className="h-3 w-3" /> {step.materialTitle ?? "Материал"}
                             <span className="text-slate-400">
@@ -212,6 +221,15 @@ export function RoadmapView({
                             Материал не задан{step.estimateHours ? ` · ~${step.estimateHours} ч на освоение` : ""}
                             {edit ? "" : " — добавьте ссылку через «Конструктор»."}
                           </p>
+                        )}
+                        {edit && (
+                          <StepCourseEdit
+                            initialTitle={step.materialTitle ?? ""}
+                            initialUrl={step.materialUrl ?? ""}
+                            onSave={(materialTitle, materialUrl) =>
+                              post({ action: "edit_step", stepId: step.id, materialTitle, materialUrl })
+                            }
+                          />
                         )}
                       </div>
                       {edit && (
@@ -227,7 +245,17 @@ export function RoadmapView({
               </ul>
 
               {edit && (
-                <AddStep onAdd={(skillName) => post({ action: "add_step", stageId: stage.id, skillName })} />
+                <AddStep
+                  onAdd={(payload) =>
+                    post({
+                      action: "add_step",
+                      stageId: stage.id,
+                      skillName: payload.skillName,
+                      materialTitle: payload.materialTitle,
+                      materialUrl: payload.materialUrl,
+                    })
+                  }
+                />
               )}
             </div>
           );
@@ -257,12 +285,131 @@ function StageRename({ initial, onSave }: { initial: string; onSave: (t: string)
   );
 }
 
-function AddStep({ onAdd }: { onAdd: (skill: string) => void }) {
-  const [val, setVal] = useState("");
+function StepCourseEdit({
+  initialTitle,
+  initialUrl,
+  onSave,
+}: {
+  initialTitle: string;
+  initialUrl: string;
+  onSave: (title: string, url: string) => void;
+}) {
+  const [title, setTitle] = useState(initialTitle);
+  const [url, setUrl] = useState(initialUrl);
+  const [error, setError] = useState<string | null>(null);
+
+  function save() {
+    const t = title.trim();
+    const u = url.trim();
+    if (!t && !u) {
+      onSave("", "");
+      setError(null);
+      return;
+    }
+    if (t && !u) {
+      setError("Добавьте ссылку на курс");
+      return;
+    }
+    if (u && !isValidHttpUrl(u)) {
+      setError("Укажите корректную ссылку (http или https)");
+      return;
+    }
+    setError(null);
+    onSave(t || "Курс", u);
+  }
+
   return (
-    <div className="mt-3 flex items-center gap-2">
-      <input className="input py-1.5" placeholder="Добавить навык" value={val} onChange={(e) => setVal(e.target.value)} />
-      <button onClick={() => { if (val.trim()) { onAdd(val); setVal(""); } }} className="btn-outline shrink-0"><Plus className="h-4 w-4" /> Навык</button>
+    <div className="mt-2 space-y-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <Link2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <input
+          className="input min-w-[8rem] flex-1 py-1 text-xs"
+          placeholder="Название курса"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          className="input min-w-[10rem] flex-[2] py-1 text-xs"
+          placeholder="https://..."
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <button type="button" onClick={save} className="btn-ghost shrink-0 p-1.5" aria-label="Сохранить ссылку на курс">
+          <Save className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function AddStep({
+  onAdd,
+}: {
+  onAdd: (payload: {
+    skillName: string;
+    materialTitle?: string;
+    materialUrl?: string;
+  }) => void;
+}) {
+  const [skill, setSkill] = useState("");
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  function submit() {
+    const skillName = skill.trim();
+    if (!skillName) return;
+    const materialTitle = title.trim();
+    const materialUrl = url.trim();
+    if (materialTitle && !materialUrl) {
+      setError("Добавьте ссылку на курс");
+      return;
+    }
+    if (materialUrl && !isValidHttpUrl(materialUrl)) {
+      setError("Укажите корректную ссылку (http или https)");
+      return;
+    }
+    setError(null);
+    onAdd({
+      skillName,
+      materialTitle: materialTitle || undefined,
+      materialUrl: materialUrl || undefined,
+    });
+    setSkill("");
+    setTitle("");
+    setUrl("");
+  }
+
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          className="input min-w-[8rem] flex-1 py-1.5"
+          placeholder="Добавить навык"
+          value={skill}
+          onChange={(e) => setSkill(e.target.value)}
+        />
+        <button type="button" onClick={submit} className="btn-outline shrink-0">
+          <Plus className="h-4 w-4" /> Навык
+        </button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 pl-0.5">
+        <Link2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <input
+          className="input min-w-[8rem] flex-1 py-1.5 text-sm"
+          placeholder="Название курса (необязательно)"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          className="input min-w-[10rem] flex-[2] py-1.5 text-sm"
+          placeholder="Ссылка на курс (необязательно)"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

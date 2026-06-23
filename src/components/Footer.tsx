@@ -11,10 +11,6 @@ export function Footer() {
             Прозрачный персонализированный путь профессионального развития.
             AI-коуч, карта развития, тесты и аналитика рынка труда в одном месте.
           </p>
-          <p className="mt-4 text-xs text-slate-400">
-            Студенческий проект НИУ ВШЭ «ИТ-консалтинг». Демо-версия: платежи,
-            данные рынка и часть интеграций мокированы.
-          </p>
         </div>
         <div>
           <h4 className="mb-3 text-sm font-semibold text-ink">Продукт</h4>
@@ -22,7 +18,6 @@ export function Footer() {
             <li><Link href="/professions" className="hover:text-brand-700">Профессии</Link></li>
             <li><Link href="/pricing" className="hover:text-brand-700">Тарифы</Link></li>
             <li><Link href="/register" className="hover:text-brand-700">Регистрация</Link></li>
-            <li><Link href="/support" className="hover:text-brand-700">Поддержка</Link></li>
           </ul>
         </div>
         <div>
