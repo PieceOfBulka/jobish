@@ -81,8 +81,28 @@
 
 ---
 
-## Следующие фичи (план)
+---
 
-| № | Ветка | MVP US | Описание |
-|---|---|---|---|
-| 13 | `feature_13_admin_panel` | US17 | Базовая admin-панель: просмотр профилей, блокировка пользователей |
+## feature_13 — Базовая admin-панель (US17)
+
+**Ветка:** `feature_13_admin_panel`  
+**MVP-требование:** US17 — «Ручная модерация кабинетов: просмотр профилей, истории, блокировка с уведомлением, аудит-лог»
+
+### Что реализовано
+
+| Файл | Роль |
+|---|---|
+| `src/app/(admin)/admin/layout.tsx` | Server layout с проверкой `role === "admin"` → redirect для остальных |
+| `src/app/(admin)/admin/page.tsx` | Список всех пользователей: имя, email, роль, тариф, статус, дата |
+| `src/app/(admin)/admin/users/[id]/page.tsx` | Полный профиль: личные данные, roadmap-прогресс, карьерные цели, история тестов, последние сообщения в чате |
+| `src/components/AdminBlockButton.tsx` | Кнопка «Заблокировать / Разблокировать» с optimistic update |
+| `src/app/api/admin/users/route.ts` | GET — список пользователей (только admin) |
+| `src/app/api/admin/users/[id]/route.ts` | GET + PATCH — профиль и блокировка с защитой от блокировки другого admin + console audit-log |
+| `src/app/api/dev/make-admin/route.ts` | Dev-only: повышение роли (заблокирован в production) |
+| `src/components/AppSidebar.tsx` | Пункт «Администрирование» при `isAdmin === true` |
+| `tests/unit/admin.test.ts` | 10 unit-тестов: role-guard, защита admin, форма ответа, toggle |
+| `tests/e2e/journey.spec.ts` | E2E US17: логин → make-admin → `/admin` → профиль → кнопка блокировки |
+
+### Результат тестов
+- Unit: **126/126** ✅
+- E2E: **16/16** ✅

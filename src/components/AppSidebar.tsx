@@ -18,9 +18,10 @@ import {
   LogOut,
   Menu,
   X,
+  ShieldCheck,
 } from "lucide-react";
 
-export function AppSidebar({ name, plan }: { name: string; plan: string }) {
+export function AppSidebar({ name, plan, isAdmin }: { name: string; plan: string; isAdmin?: boolean }) {
   const t = useTranslations("nav");
   const tPlans = useTranslations("plans");
   const pathname = usePathname();
@@ -35,6 +36,7 @@ export function AppSidebar({ name, plan }: { name: string; plan: string }) {
     { href: "/vacancies", label: t("sidebarVacancies"), icon: Briefcase },
     { href: "/tests", label: t("sidebarTests"), icon: ClipboardCheck },
     { href: "/profile", label: t("sidebarProfile"), icon: User },
+    ...(isAdmin ? [{ href: "/admin", label: "Администрирование", icon: ShieldCheck }] : []),
   ];
 
   async function logout() {

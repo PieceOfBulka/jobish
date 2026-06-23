@@ -182,3 +182,37 @@ test("выбор трека автоматически создаёт карье
   await page.goto("/dashboard");
   await expect(page.getByText(/Аналитик данных|Middle|Senior|Junior/i).first()).toBeVisible();
 });
+
+// US17: admin-панель — доступ и блокировка
+test("admin-панель: список пользователей и блокировка (US17)", async ({ page }) => {
+  // Повышаем текущего e2e-пользователя до admin через dev API
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(user.email);
+  await page.getByLabel("Пароль", { exact: true }).fill(user.password);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL(/\/dashboard/);
+
+  await page.evaluate(async (email) => {
+    await fetch("/api/dev/make-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  }, user.email);
+
+  // После повышения роли нужно обновить страницу, чтобы layout подхватил новую роль
+  await page.reload();
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Пользователи платформы" })).toBeVisible();
+
+  // Хотя бы один пользователь в таблице (сам e2e-пользователь)
+  await expect(page.locator("table").getByText(user.email)).toBeVisible();
+
+  // Переходим на профиль пользователя
+  const profileLink = page.getByRole("link", { name: "Профиль" }).first();
+  await profileLink.click();
+  await expect(page).toHaveURL(/\/admin\/users\//);
+
+  // Кнопка блокировки присутствует
+  await expect(page.getByTestId("admin-block-btn")).toBeVisible();
+});
