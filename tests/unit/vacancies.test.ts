@@ -6,9 +6,9 @@ import {
 } from "../../src/lib/vacancies";
 
 const V: Vacancy[] = [
-  { id: "1", professionSlug: "frontend-developer", title: "React Dev", company: "Яндекс", city: "Москва", format: "remote", salaryMin: 150000, salaryMax: 250000, experience: 2, employment: "full" },
-  { id: "2", professionSlug: "frontend-developer", title: "Junior Front", company: "VK", city: "Санкт-Петербург", format: "office", salaryMin: 80000, salaryMax: 120000, experience: 0, employment: "full" },
-  { id: "3", professionSlug: "data-analyst", title: "Analyst", company: "Сбер", city: "Москва", format: "hybrid", salaryMin: 130000, salaryMax: 200000, experience: 1, employment: "part" },
+  { id: "1", professionSlug: "frontend-developer", title: "React Dev", company: "Яндекс", city: "Москва", format: "remote", salaryMin: 150000, salaryMax: 250000, experience: 2, employment: "full", url: "https://hh.ru/vacancy/1" },
+  { id: "2", professionSlug: "frontend-developer", title: "Junior Front", company: "VK", city: "Санкт-Петербург", format: "office", salaryMin: 80000, salaryMax: 120000, experience: 0, employment: "full", url: "https://hh.ru/vacancy/2" },
+  { id: "3", professionSlug: "data-analyst", title: "Analyst", company: "Сбер", city: "Москва", format: "hybrid", salaryMin: 130000, salaryMax: 200000, experience: 1, employment: "part", url: "https://hh.ru/vacancy/3" },
 ];
 
 describe("matchesVacancyFilter", () => {

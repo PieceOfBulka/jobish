@@ -176,7 +176,7 @@ function mapHhItem(v: HhSearchItem): HhVacancyItem {
     salaryMax: hi,
     experience: EXP_TO_YEARS[v.experience?.id ?? "noExperience"] ?? 0,
     employment: v.employment?.id ?? "full",
-    url: v.alternate_url ?? "https://hh.ru/",
+    url: v.alternate_url ?? `https://hh.ru/vacancy/${v.id}`,
   };
 }
 
@@ -264,6 +264,71 @@ export async function fetchHhSalarySummary(
     console.warn("[hh] request failed:", e instanceof Error ? e.message : e);
     return null;
   }
+}
+
+export interface HhSummary {
+  query: string;
+  found: number;
+  medianSalary: number | null;
+  samples: {
+    title: string;
+    company: string;
+    salaryFrom: number | null;
+    salaryTo: number | null;
+    url?: string;
+  }[];
+}
+
+/** Краткая сводка по вакансиям для AI-коуча (ФТ-3.1). */
+export async function fetchHhSummary(
+  query: string,
+  areaId = "113",
+): Promise<HhSummary | null> {
+  if (!isHhEnabled()) return null;
+  const token = await getToken();
+  if (!token) return null;
+  try {
+    const url = new URL(`${API}/vacancies`);
+    url.searchParams.set("text", query);
+    url.searchParams.set("area", areaId);
+    url.searchParams.set("per_page", "30");
+    url.searchParams.set("only_with_salary", "true");
+    const res = await fetchWithTimeout(url.toString(), {
+      headers: { Authorization: `Bearer ${token}`, "User-Agent": USER_AGENT },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { found?: number; items?: HhSearchItem[] };
+    const items = data.items ?? [];
+    const stats = salarySummary(extractSalaries(items));
+    return {
+      query,
+      found: data.found ?? items.length,
+      medianSalary: stats?.median ?? null,
+      samples: items.slice(0, 3).map((i) => {
+        const row = mapHhItem(i);
+        return {
+          title: row.title,
+          company: row.company,
+          salaryFrom: i.salary?.from ?? null,
+          salaryTo: i.salary?.to ?? null,
+          url: row.url,
+        };
+      }),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function hhSummaryText(s: HhSummary): string {
+  const parts = [
+    `Актуальные данные hh.ru по запросу «${s.query}»: открыто ~${s.found} вакансий с указанной зарплатой`,
+  ];
+  if (s.medianSalary) {
+    parts.push(`, медиана ЗП ≈ ${new Intl.NumberFormat("ru-RU").format(s.medianSalary)} ₽`);
+  }
+  parts.push(".");
+  return parts.join("");
 }
 
 function fetchWithTimeout(url: string, init: RequestInit, ms = 6000): Promise<Response> {

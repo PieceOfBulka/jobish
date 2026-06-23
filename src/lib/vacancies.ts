@@ -11,6 +11,7 @@ export interface Vacancy {
   salaryMax: number;
   experience: number; // требуемый опыт, лет
   employment: string; // full | part | project
+  url: string;
 }
 
 export interface VacancyFilter {
