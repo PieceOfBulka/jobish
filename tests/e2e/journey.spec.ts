@@ -157,3 +157,14 @@ test("выход из аккаунта", async ({ page }) => {
   await page.getByRole("button", { name: "Выйти" }).click();
   await expect(page).toHaveURL(/localhost:3000\/$/);
 });
+
+// US9: выбор трека автоматически генерирует карьерные цели
+test("выбор трека автоматически создаёт карьерные цели (US9)", async ({ page }) => {
+  await login(page);
+  await page.goto("/professions/data-analyst");
+  await page.getByRole("button", { name: /Выбрать как трек развития/i }).click();
+  await page.waitForURL(/\/roadmap/);
+  // Цели должны появиться на дашборде
+  await page.goto("/dashboard");
+  await expect(page.getByText(/Аналитик данных|Middle|Senior|Junior/i).first()).toBeVisible();
+});
